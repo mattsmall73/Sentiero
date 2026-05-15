@@ -1,2 +1,2 @@
-# Santieno
+# Sentieno
 Study Helper 
