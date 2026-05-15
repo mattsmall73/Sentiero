@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #fbfbfd;
+  color: #2a2522;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif-display {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+.rose-foil-text {
+  background: linear-gradient(
+    135deg,
+    #e8c9a0 0%,
+    #c4925a 25%,
+    #8a5a32 50%,
+    #c4925a 75%,
+    #e8c9a0 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.rose-gradient {
+  background: linear-gradient(135deg, #e8c9a0 0%, #c4925a 50%, #a07242 100%);
+}
+
+.rose-soft-gradient {
+  background: linear-gradient(135deg, #f5ebe0 0%, #e8d4ba 100%);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #a07242;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
