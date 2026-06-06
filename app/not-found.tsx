@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 
 export default function NotFound() {
   return (
-    <main style={{ background: "#fbfbfd", minHeight: "100vh" }}>
+    <main style={{ background: "#14110d", minHeight: "100vh" }}>
       <Header />
       <section style={{ padding: "120px 32px", textAlign: "center" }}>
         <h1
@@ -12,7 +12,7 @@ export default function NotFound() {
             fontWeight: 400,
             fontSize: 36,
             letterSpacing: "-0.02em",
-            color: "#2a2522",
+            color: "#f4ece0",
             margin: "0 0 16px",
           }}
         >
@@ -22,7 +22,7 @@ export default function NotFound() {
           style={{
             fontFamily: "Inter, sans-serif",
             fontSize: 15,
-            color: "#6e6263",
+            color: "rgba(244,236,224,0.7)",
             margin: "0 0 24px",
           }}
         >
@@ -33,7 +33,7 @@ export default function NotFound() {
           style={{
             fontFamily: "Inter, sans-serif",
             fontSize: 13,
-            color: "#8a6845",
+            color: "#d8a974",
             textDecoration: "underline",
             textUnderlineOffset: 3,
           }}

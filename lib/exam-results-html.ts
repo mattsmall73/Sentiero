@@ -79,78 +79,90 @@ export function renderResultsHtml(input: {
 <title>${escapeHtml(paper_title)} — results</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400;1,600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Dark forest surround, warm cream panels, rose-gold accents — matched to
+   * the Sentiero landing so the marked results stay in the same world as the
+   * front door and the tool pages. Fraunces is the hero heading only; panel
+   * text is plain Inter. */
   :root {
-    --bg: #f4f1ea; --paper: #fbf9f4; --ink: #2a2622; --muted: #6b6358;
-    --accent: #8b3a3a; --accent-soft: #e8dcd0; --line: #d9d2c4;
-    --done: #5a7a5a; --done-soft: #e3ebe0;
+    --surround: #14110d; --panel: #fbf6ee; --panel-ink: #39322b; --panel-muted: #8a8073;
+    --field: #f3ece1; --line: rgba(57,50,43,0.12);
+    --on-dark: #f4ece0; --on-dark-muted: rgba(244,236,224,0.70);
+    --accent-deep: #e3b685; --accent-panel-text: #8a6845;
+    --accent-gradient: linear-gradient(135deg, #e8c9a8 0%, #c9986a 28%, #a07242 55%, #8a6845 78%, #b8895c 100%);
+    --panel-shadow: 0 8px 30px rgba(0,0,0,0.22); --done: #5a7a5a;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Inter Tight', sans-serif; font-size: 16px; line-height: 1.6; padding: 32px 16px 80px; }
+  body { margin: 0; background: var(--surround); color: var(--on-dark); font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.6; padding: 32px 16px 80px; }
   .wrap { max-width: 760px; margin: 0 auto; }
-  header.top { text-align: center; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
-  .for-line { font-family: 'Fraunces', serif; font-style: italic; font-size: 14px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
-  h1 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 32px; margin: 0 0 8px; letter-spacing: -0.01em; }
-  .meta-row { font-family: 'Fraunces', serif; font-style: italic; color: var(--muted); font-size: 15px; }
+  header.top { text-align: center; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .for-line { font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 14px; color: var(--accent-deep); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+  h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 32px; margin: 0 0 8px; letter-spacing: -0.02em; color: var(--on-dark); }
+  .meta-row { font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--on-dark-muted); font-size: 15px; }
   .meta-row .dot { margin: 0 8px; opacity: 0.5; }
   .total-mark {
-    background: var(--accent);
-    color: var(--paper);
-    border-radius: 4px;
+    background-image: var(--accent-gradient);
+    color: #fff;
+    border-radius: 16px;
     padding: 18px 24px;
     margin: 24px 0 32px;
     text-align: center;
+    box-shadow: 0 2px 10px rgba(160,114,66,0.28);
   }
-  .total-mark .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.85; margin-bottom: 6px; }
-  .total-mark .value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 36px; letter-spacing: -0.01em; }
+  .total-mark .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.9; margin-bottom: 6px; }
+  .total-mark .value { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 36px; letter-spacing: -0.01em; }
   .summary {
-    background: var(--paper);
+    background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: 16px;
     padding: 22px 24px;
     margin-bottom: 28px;
     font-size: 15px;
     line-height: 1.65;
+    color: var(--panel-ink);
+    box-shadow: var(--panel-shadow);
   }
-  .summary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .summary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent-panel-text); font-weight: 600; margin-bottom: 8px; }
   .questions-label {
-    font-family: 'Fraunces', serif;
-    font-style: italic;
-    color: var(--muted);
+    color: var(--on-dark-muted);
     font-size: 14px;
     margin-bottom: 12px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
   .question {
-    background: var(--paper);
+    background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: 16px;
     padding: 22px 24px;
     margin-bottom: 18px;
+    color: var(--panel-ink);
+    box-shadow: var(--panel-shadow);
   }
   .question-header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
-  .question-number { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; color: var(--accent); }
-  .question-mark { margin-left: auto; font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; }
-  .question-text { font-size: 14px; color: var(--muted); margin-bottom: 14px; white-space: pre-wrap; line-height: 1.55; }
-  .answer-block { background: var(--bg); border-radius: 4px; padding: 14px 16px; margin-bottom: 14px; }
-  .answer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
-  .answer-body { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
-  .answer-body .empty { color: var(--muted); }
-  .feedback p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; }
+  .question-number { font-weight: 700; font-size: 20px; color: var(--accent-panel-text); }
+  .question-mark { margin-left: auto; font-weight: 600; font-size: 18px; color: var(--panel-ink); }
+  .question-text { font-size: 14px; color: var(--panel-muted); margin-bottom: 14px; white-space: pre-wrap; line-height: 1.55; }
+  .answer-block { background: var(--field); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .answer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent-panel-text); font-weight: 600; margin-bottom: 6px; }
+  .answer-body { font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: var(--panel-ink); }
+  .answer-body .empty { color: var(--panel-muted); }
+  .feedback p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: var(--panel-ink); }
   .feedback p:last-child { margin-bottom: 0; }
-  .feedback-line.closing { color: var(--accent); font-style: italic; font-family: 'Fraunces', serif; font-size: 16px; }
+  .feedback-line.closing { color: var(--accent-panel-text); font-style: italic; font-size: 16px; }
   .footer-note {
-    background: var(--accent-soft);
-    border-radius: 4px;
+    background: rgba(160,114,66,0.1);
+    border: 1px solid var(--line);
+    border-radius: 16px;
     padding: 20px 24px;
     margin-top: 28px;
     margin-bottom: 20px;
     font-size: 15px;
     line-height: 1.6;
+    color: var(--panel-ink);
   }
-  .footer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  .footer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent-panel-text); font-weight: 600; margin-bottom: 6px; }
   @media (max-width: 480px) {
     h1 { font-size: 26px; }
     .total-mark .value { font-size: 30px; }

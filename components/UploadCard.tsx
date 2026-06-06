@@ -115,13 +115,13 @@ export function UploadCard() {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         style={{
-          background: "#ffffff",
+          background: "#fbf6ee",
           border: dragging
-            ? "0.5px solid rgba(160,114,66,0.5)"
-            : "0.5px solid rgba(42,37,34,0.1)",
+            ? "1px solid rgba(160,114,66,0.5)"
+            : "1px solid rgba(57,50,43,0.12)",
           borderRadius: 16,
           padding: "40px 32px",
-          boxShadow: "0 1px 2px rgba(42,37,34,0.04)",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
           textAlign: "center",
           transition: "border-color 0.15s ease",
         }}
@@ -147,10 +147,10 @@ export function UploadCard() {
           </svg>
         </div>
 
-        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 15, color: "#2a2522", margin: "0 0 6px" }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 15, color: "#39322b", margin: "0 0 6px" }}>
           {fileLabel ?? "Drop a file here"}
         </div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 13, color: "#8a7e76", margin: "0 0 24px" }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 13, color: "#8a8073", margin: "0 0 24px" }}>
           PDF, image, Word, or plain text
         </div>
 
@@ -176,6 +176,7 @@ export function UploadCard() {
             fontSize: 14,
             letterSpacing: "-0.01em",
             cursor: "pointer",
+            boxShadow: "0 2px 10px rgba(160,114,66,0.28)",
           }}
         >
           Choose file
@@ -192,7 +193,7 @@ export function UploadCard() {
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontSize: 12,
-              color: "#8a7e76",
+              color: "#8a8073",
               cursor: "pointer",
               textDecoration: "underline",
               textDecorationColor: "rgba(138,126,118,0.4)",
@@ -212,13 +213,13 @@ export function UploadCard() {
             style={{
               marginTop: 16,
               width: "100%",
-              border: "0.5px solid rgba(42,37,34,0.1)",
+              border: "1px solid rgba(57,50,43,0.18)",
               borderRadius: 12,
               padding: 12,
               fontFamily: "Inter, sans-serif",
               fontSize: 13,
-              color: "#2a2522",
-              background: "#fbfbfd",
+              color: "#39322b",
+              background: "#f3ece1",
               resize: "vertical",
             }}
           />
@@ -236,7 +237,7 @@ export function UploadCard() {
             fontFamily: "Inter, sans-serif",
             fontWeight: 400,
             fontSize: 12,
-            color: "#8a7e76",
+            color: "rgba(244,236,224,0.7)",
             cursor: "pointer",
           }}
         >
@@ -249,16 +250,17 @@ export function UploadCard() {
           style={{
             marginTop: 16,
             padding: "20px 24px",
-            background: "#ffffff",
-            border: "0.5px solid rgba(42,37,34,0.08)",
+            background: "#fbf6ee",
+            border: "1px solid rgba(57,50,43,0.12)",
             borderRadius: 12,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
             display: "flex",
             flexDirection: "column",
             gap: 16,
           }}
         >
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6263" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>
               Who&apos;s this for?
             </span>
             <input
@@ -267,19 +269,19 @@ export function UploadCard() {
               onChange={(e) => setUserName(e.target.value)}
               placeholder="Optional"
               style={{
-                border: "0.5px solid rgba(42,37,34,0.1)",
+                border: "1px solid rgba(57,50,43,0.18)",
                 borderRadius: 8,
                 padding: "8px 12px",
                 fontFamily: "Inter, sans-serif",
                 fontSize: 13,
-                color: "#2a2522",
-                background: "#fbfbfd",
+                color: "#39322b",
+                background: "#f3ece1",
               }}
             />
           </label>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6263" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>
               How long have you got?
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -291,9 +293,9 @@ export function UploadCard() {
                     type="button"
                     onClick={() => setPresetIndex(active ? null : i)}
                     style={{
-                      border: active ? "0.5px solid #a07242" : "0.5px solid rgba(42,37,34,0.1)",
-                      background: active ? "#f5ebe0" : "#fbfbfd",
-                      color: "#2a2522",
+                      border: active ? "1px solid #a07242" : "1px solid rgba(57,50,43,0.18)",
+                      background: active ? "#f5ebe0" : "#f3ece1",
+                      color: "#39322b",
                       padding: "6px 12px",
                       borderRadius: 980,
                       fontFamily: "Inter, sans-serif",
@@ -312,9 +314,9 @@ export function UploadCard() {
                   setPresetIndex(null);
                 }}
                 style={{
-                  border: precise ? "0.5px solid #a07242" : "0.5px solid rgba(42,37,34,0.1)",
-                  background: precise ? "#f5ebe0" : "#fbfbfd",
-                  color: "#2a2522",
+                  border: precise ? "1px solid #a07242" : "1px solid rgba(57,50,43,0.18)",
+                  background: precise ? "#f5ebe0" : "#f3ece1",
+                  color: "#39322b",
                   padding: "6px 12px",
                   borderRadius: 980,
                   fontFamily: "Inter, sans-serif",
@@ -337,15 +339,16 @@ export function UploadCard() {
                     placeholder="0"
                     style={{
                       width: 60,
-                      border: "0.5px solid rgba(42,37,34,0.1)",
+                      border: "1px solid rgba(57,50,43,0.18)",
                       borderRadius: 8,
                       padding: "6px 8px",
                       fontFamily: "Inter, sans-serif",
                       fontSize: 13,
-                      background: "#fbfbfd",
+                      color: "#39322b",
+                      background: "#f3ece1",
                     }}
                   />
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6263" }}>hours</span>
+                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>hours</span>
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <input
@@ -357,15 +360,16 @@ export function UploadCard() {
                     placeholder="0"
                     style={{
                       width: 60,
-                      border: "0.5px solid rgba(42,37,34,0.1)",
+                      border: "1px solid rgba(57,50,43,0.18)",
                       borderRadius: 8,
                       padding: "6px 8px",
                       fontFamily: "Inter, sans-serif",
                       fontSize: 13,
-                      background: "#fbfbfd",
+                      color: "#39322b",
+                      background: "#f3ece1",
                     }}
                   />
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6263" }}>minutes</span>
+                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>minutes</span>
                 </label>
               </div>
             )}
@@ -390,6 +394,7 @@ export function UploadCard() {
             letterSpacing: "-0.01em",
             cursor: loading ? "wait" : "pointer",
             opacity: loading ? 0.7 : 1,
+            boxShadow: "0 2px 10px rgba(160,114,66,0.28)",
           }}
         >
           {loading ? "Generating…" : "Generate"}
@@ -403,7 +408,7 @@ export function UploadCard() {
             textAlign: "center",
             fontFamily: "Inter, sans-serif",
             fontSize: 13,
-            color: "#a04242",
+            color: "#e9b6a8",
           }}
         >
           {error}
@@ -417,7 +422,7 @@ export function UploadCard() {
           fontFamily: "Inter, sans-serif",
           fontWeight: 400,
           fontSize: 13,
-          color: "#8a7e76",
+          color: "rgba(244,236,224,0.7)",
         }}
       >
         No account needed. Your work stays yours.

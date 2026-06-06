@@ -9,11 +9,11 @@ export function Header({ rightSlot }: HeaderProps) {
     <header
       style={{
         padding: "20px 32px",
-        borderBottom: "0.5px solid rgba(42,37,34,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.1)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        background: "#fbfbfd",
+        background: "transparent",
       }}
     >
       <Link
@@ -36,7 +36,7 @@ export function Header({ rightSlot }: HeaderProps) {
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontSize: 13,
-              color: "#8a6845",
+              color: "#d8a974",
               cursor: "default",
             }}
           >

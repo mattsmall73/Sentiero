@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function GuideHomePage() {
   return (
-    <main style={{ background: "#fbfbfd", minHeight: "100vh" }}>
+    <main style={{ background: "#14110d", minHeight: "100vh" }}>
       <Header />
 
       <section style={{ padding: "80px 32px 64px", textAlign: "center" }}>
@@ -23,12 +23,12 @@ export default function GuideHomePage() {
             fontSize: 48,
             letterSpacing: "-0.02em",
             lineHeight: 1.15,
-            color: "#2a2522",
+            color: "#f4ece0",
             margin: 0,
           }}
         >
           Whatever you’re staring at<br />
-          <em style={{ fontStyle: "italic", fontWeight: 400, color: "#6e6263" }}>
+          <em style={{ fontStyle: "italic", fontWeight: 400, color: "#d8c5b2" }}>
             find a way through it.
           </em>
         </h1>
@@ -39,7 +39,7 @@ export default function GuideHomePage() {
             fontWeight: 400,
             fontSize: 17,
             lineHeight: 1.5,
-            color: "#6e6263",
+            color: "rgba(244,236,224,0.7)",
             maxWidth: 480,
             margin: "24px auto 48px",
           }}

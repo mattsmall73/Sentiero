@@ -17,9 +17,9 @@ export function HowItWorks() {
   return (
     <section
       style={{
-        background: "#faf6f1",
+        background: "#14110d",
         padding: "48px 32px 64px",
-        borderTop: "0.5px solid rgba(42,37,34,0.06)",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
       }}
     >
       <div
@@ -38,7 +38,7 @@ export function HowItWorks() {
                 fontFamily: "Inter, sans-serif",
                 fontWeight: 500,
                 fontSize: 13,
-                color: "#2a2522",
+                color: "#f4ece0",
                 marginBottom: 6,
               }}
             >
@@ -49,7 +49,7 @@ export function HowItWorks() {
                 fontFamily: "Inter, sans-serif",
                 fontWeight: 400,
                 fontSize: 12,
-                color: "#6e6263",
+                color: "rgba(244,236,224,0.7)",
                 lineHeight: 1.5,
               }}
             >
