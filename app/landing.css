@@ -1,0 +1,548 @@
+/*
+ * Sentiero marketing landing page.
+ * Ported from the agreed mockup (sentiero-landing-dark.html). All rules are
+ * scoped under .sentiero-landing so the dark theme and fixed backdrop do not
+ * leak into the study-guide tool (/guide) or the exam placeholder (/exam).
+ */
+
+.sentiero-landing {
+  --accent-gradient: linear-gradient(135deg, #e8c9a8 0%, #c9986a 28%, #a07242 55%, #8a6845 78%, #b8895c 100%);
+  --radius-lg: 20px;
+  --maxw: 980px;
+
+  --bg: #14110d;
+  --paper: rgba(28, 23, 18, 0.52);
+  --ink: #f4ece0;
+  --ink-soft: rgba(244, 236, 224, 0.74);
+  --ink-faint: rgba(244, 236, 224, 0.46);
+  --line: rgba(255, 255, 255, 0.13);
+  --accent-soft: rgba(224, 180, 131, 0.16);
+  --accent-solid: #d8a974;
+  --accent-deep: #e3b685;
+
+  position: relative;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Inter", -apple-system, sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* The forest sits on a negative z-index fixed layer (.sl-bg), so any opaque
+ * background on <body> or the wrapper paints *over* it. globals.css gives
+ * <html> a background, which disables the body->canvas background propagation
+ * the mockup relied on, so body's own background would otherwise cover the
+ * forest. Fix: when the landing is mounted, paint the dark fallback on the
+ * canvas (<html>) — behind the backdrop — and make <body> transparent so the
+ * forest shows through. This also keeps iOS overscroll warm dark rather than
+ * the light study-guide canvas. Toggled by LandingBackdrop. */
+html.sentiero-landing-active {
+  background: #14110d;
+}
+html.sentiero-landing-active body {
+  background: transparent;
+}
+
+/* ---- Responsive forest backdrop + scrim ---- */
+.sentiero-landing .sl-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: #14110d;
+  background-image: url("/hero-forest-portrait.webp");
+  background-position: center 44%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1.26);
+  will-change: transform;
+  filter: brightness(0.98) saturate(1.06) contrast(1.02);
+}
+.sentiero-landing .sl-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 9, 6, 0.4) 0%,
+    rgba(12, 9, 6, 0.52) 55%,
+    rgba(12, 9, 6, 0.66) 100%
+  );
+}
+
+.sentiero-landing .wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* ---- Nav ---- */
+.sentiero-landing nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  background: rgba(18, 14, 10, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.sentiero-landing .nav-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sentiero-landing .logo {
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+}
+.sentiero-landing .nav-links {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+.sentiero-landing .nav-links a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.sentiero-landing .nav-links a:hover {
+  color: var(--ink);
+}
+.sentiero-landing .nav-cta {
+  padding: 9px 18px;
+  border-radius: 980px;
+  background: var(--accent-gradient);
+  color: #fff !important;
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(160, 114, 66, 0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.sentiero-landing .nav-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(160, 114, 66, 0.36);
+}
+
+/* ---- Hero ---- */
+.sentiero-landing .hero {
+  position: relative;
+  text-align: center;
+  padding: 120px 0 90px;
+  overflow: hidden;
+}
+.sentiero-landing .eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-solid);
+  margin-bottom: 22px;
+  opacity: 0;
+  animation: sl-rise 0.7s ease forwards;
+}
+.sentiero-landing h1.hero-title {
+  font-family: "Fraunces", serif;
+  font-weight: 500;
+  font-size: clamp(40px, 6vw, 62px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  max-width: none;
+  margin: 0 auto 24px;
+  opacity: 0;
+  animation: sl-rise 0.7s ease 0.1s forwards;
+}
+.sentiero-landing h1.hero-title .shine {
+  font-style: italic;
+  color: var(--ink);
+}
+.sentiero-landing .hero-sub {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--ink-soft);
+  margin: 0 auto;
+  opacity: 0;
+  animation: sl-rise 0.7s ease 0.2s forwards;
+}
+.sentiero-landing .hero .eyebrow,
+.sentiero-landing .hero .hero-title,
+.sentiero-landing .hero .hero-sub {
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.55);
+}
+
+@keyframes sl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Concept card ---- */
+.sentiero-landing .concept {
+  padding: 70px 0;
+}
+.sentiero-landing .concept-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 54px 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: rgba(26, 21, 16, 0.5);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+  box-shadow: 0 14px 46px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.sentiero-landing .concept-card h2 {
+  font-family: "Fraunces", serif;
+  font-weight: 500;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+.sentiero-landing .concept-card p {
+  font-size: 17.5px;
+  color: var(--ink-soft);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.75;
+}
+.sentiero-landing .concept-card p + p {
+  margin-top: 18px;
+}
+.sentiero-landing .concept-close {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 20px !important;
+  color: var(--accent-deep) !important;
+  margin-top: 28px !important;
+}
+
+/* ---- App cards ---- */
+.sentiero-landing .apps {
+  padding: 50px 0 90px;
+}
+.sentiero-landing .section-head {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.sentiero-landing .section-head h2 {
+  font-family: "Fraunces", serif;
+  font-weight: 500;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.sentiero-landing .section-head p {
+  font-size: 17px;
+  color: var(--ink-soft);
+}
+.sentiero-landing .app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.sentiero-landing .app-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 38px 36px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  position: relative;
+  overflow: hidden;
+  background: rgba(26, 21, 16, 0.5);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+  box-shadow: 0 14px 46px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.sentiero-landing .app-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(224, 180, 131, 0.3);
+}
+.sentiero-landing .app-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+.sentiero-landing .app-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: var(--accent-deep);
+}
+.sentiero-landing .app-card h3 {
+  font-family: "Fraunces", serif;
+  font-weight: 500;
+  font-size: 23px;
+  letter-spacing: -0.015em;
+  margin-bottom: 10px;
+}
+.sentiero-landing .app-card p {
+  font-size: 15.5px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+.sentiero-landing .app-link {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--accent-solid);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.2s;
+}
+.sentiero-landing .app-card:hover .app-link {
+  gap: 11px;
+}
+
+/* ---- Flow steps ---- */
+.sentiero-landing .flow {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  margin: 4px 0 24px;
+  position: relative;
+}
+.sentiero-landing .flow::before {
+  content: "";
+  position: absolute;
+  left: 6.5px;
+  top: 9px;
+  bottom: 9px;
+  width: 1.5px;
+  background: linear-gradient(180deg, var(--accent-solid) 0%, var(--accent-soft) 100%);
+  opacity: 0.55;
+}
+.sentiero-landing .flow-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  position: relative;
+}
+.sentiero-landing .flow-dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  margin-top: 3px;
+  box-shadow: 0 0 0 4px rgba(26, 21, 16, 0.85);
+  position: relative;
+  z-index: 1;
+}
+.sentiero-landing .flow-text {
+  font-size: 14.5px;
+  color: var(--ink);
+  line-height: 1.45;
+}
+.sentiero-landing .flow-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 3px;
+}
+
+/* ---- For parents ---- */
+.sentiero-landing .reassure {
+  padding: 0 0 90px;
+}
+.sentiero-landing .reassure-inner {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 50px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 44px;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(36, 29, 22, 0.52), rgba(26, 21, 16, 0.58));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 14px 46px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.sentiero-landing .reassure-inner h2 {
+  font-family: "Fraunces", serif;
+  font-weight: 500;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.sentiero-landing .reassure-inner p {
+  font-size: 15.5px;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+.sentiero-landing .reassure-inner p + p {
+  margin-top: 14px;
+}
+.sentiero-landing .parents-close {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 18px !important;
+  color: var(--accent-deep) !important;
+  margin-top: 18px !important;
+}
+.sentiero-landing .reassure-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sentiero-landing .reassure-points li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 15.5px;
+  color: var(--ink);
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sentiero-landing .reassure-points li:last-child {
+  border-bottom: none;
+}
+.sentiero-landing .check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.sentiero-landing .check svg {
+  width: 12px;
+  height: 12px;
+  stroke: #fff;
+  stroke-width: 3;
+}
+
+/* ---- Footer ---- */
+.sentiero-landing footer {
+  border-top: 1px solid var(--line);
+  padding: 44px 0;
+}
+.sentiero-landing .foot-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.sentiero-landing .foot-logo {
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  font-size: 19px;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sentiero-landing .foot-tag {
+  font-size: 14px;
+  color: var(--ink-faint);
+  font-style: italic;
+  font-family: "Fraunces", serif;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 760px) {
+  .sentiero-landing .nav-links {
+    display: none;
+  }
+  .sentiero-landing .app-grid {
+    grid-template-columns: 1fr;
+  }
+  .sentiero-landing .reassure-inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .sentiero-landing .hero {
+    min-height: 82vh;
+    padding: 72px 0 30px;
+  }
+  .sentiero-landing .concept-card {
+    padding: 40px 28px;
+  }
+}
+
+/* Desktop: swap to the widescreen forest (path winds across the frame); the
+ * portrait image above is kept for mobile / small screens. Also gives the hero
+ * more height so the path reads before the first card, and darkens the wide
+ * flanks so the eye is led down the central path. */
+@media (min-width: 761px) {
+  .sentiero-landing .sl-bg {
+    background-image: url("/hero-forest-landscape.jpg");
+    background-position: center 50%;
+  }
+  .sentiero-landing .sl-scrim {
+    background: linear-gradient(
+        90deg,
+        rgba(10, 8, 5, 0.85) 0%,
+        rgba(10, 8, 5, 0.32) 16%,
+        rgba(10, 8, 5, 0) 35%,
+        rgba(10, 8, 5, 0) 65%,
+        rgba(10, 8, 5, 0.32) 84%,
+        rgba(10, 8, 5, 0.85) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(12, 9, 6, 0.36) 0%,
+        rgba(12, 9, 6, 0.46) 55%,
+        rgba(12, 9, 6, 0.62) 100%
+      );
+  }
+  .sentiero-landing .hero {
+    min-height: 73vh;
+    padding-bottom: 40px;
+  }
+  /* Keep the first phrase on a single line on desktop. The font is capped low
+   * enough (62px) that it fits the content width without overflowing; mobile
+   * keeps natural wrapping so the hero stays large rather than shrinking. */
+  .sentiero-landing h1.hero-title {
+    white-space: nowrap;
+  }
+}
+
+/* Accessibility: switch off the entrance animations for reduced-motion users.
+ * The scroll-drift on .sl-bg is disabled in JS (LandingBackdrop) so the
+ * backdrop sits completely still. */
+@media (prefers-reduced-motion: reduce) {
+  .sentiero-landing .eyebrow,
+  .sentiero-landing h1.hero-title,
+  .sentiero-landing .hero-sub {
+    animation: none;
+    opacity: 1;
+  }
+}
