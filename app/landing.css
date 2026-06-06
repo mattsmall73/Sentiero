@@ -29,10 +29,19 @@
   overflow-x: hidden;
 }
 
-/* Keep iOS overscroll the same warm dark as the backdrop rather than the
- * light study-guide canvas defined in globals.css. Toggled by LandingBackdrop. */
-body.landing-active {
+/* The forest sits on a negative z-index fixed layer (.sl-bg), so any opaque
+ * background on <body> or the wrapper paints *over* it. globals.css gives
+ * <html> a background, which disables the body->canvas background propagation
+ * the mockup relied on, so body's own background would otherwise cover the
+ * forest. Fix: when the landing is mounted, paint the dark fallback on the
+ * canvas (<html>) — behind the backdrop — and make <body> transparent so the
+ * forest shows through. This also keeps iOS overscroll warm dark rather than
+ * the light study-guide canvas. Toggled by LandingBackdrop. */
+html.sentiero-landing-active {
   background: #14110d;
+}
+html.sentiero-landing-active body {
+  background: transparent;
 }
 
 /* ---- Responsive forest backdrop + scrim ---- */
@@ -40,6 +49,7 @@ body.landing-active {
   position: fixed;
   inset: 0;
   z-index: -2;
+  background-color: #14110d;
   background-image: url("/hero-forest-portrait.webp");
   background-position: center 44%;
   background-size: cover;

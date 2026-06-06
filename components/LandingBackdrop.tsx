@@ -16,7 +16,7 @@ export function LandingBackdrop() {
   const bgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.body.classList.add("landing-active");
+    document.documentElement.classList.add("sentiero-landing-active");
 
     const bg = bgRef.current;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -63,7 +63,7 @@ export function LandingBackdrop() {
     reduce.addEventListener?.("change", sync);
 
     return () => {
-      document.body.classList.remove("landing-active");
+      document.documentElement.classList.remove("sentiero-landing-active");
       stop();
       reduce.removeEventListener?.("change", sync);
     };
