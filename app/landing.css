@@ -156,11 +156,11 @@ html.sentiero-landing-active body {
 .sentiero-landing h1.hero-title {
   font-family: "Fraunces", serif;
   font-weight: 500;
-  font-size: clamp(40px, 6.5vw, 68px);
+  font-size: clamp(40px, 6vw, 62px);
   line-height: 1.05;
   letter-spacing: -0.025em;
   color: var(--ink);
-  max-width: 800px;
+  max-width: none;
   margin: 0 auto 24px;
   opacity: 0;
   animation: sl-rise 0.7s ease 0.1s forwards;
@@ -526,6 +526,12 @@ html.sentiero-landing-active body {
   .sentiero-landing .hero {
     min-height: 73vh;
     padding-bottom: 40px;
+  }
+  /* Keep the first phrase on a single line on desktop. The font is capped low
+   * enough (62px) that it fits the content width without overflowing; mobile
+   * keeps natural wrapping so the hero stays large rather than shrinking. */
+  .sentiero-landing h1.hero-title {
+    white-space: nowrap;
   }
 }
 
