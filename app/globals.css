@@ -19,14 +19,16 @@ body {
   font-family: "Fraunces", Georgia, serif;
 }
 
+/* Matched to the landing's --accent-gradient so the logo foil and the tool
+ * buttons share the exact rose-gold of the front door. */
 .rose-foil-text {
   background: linear-gradient(
     135deg,
-    #e8c9a0 0%,
-    #c4925a 25%,
-    #8a5a32 50%,
-    #c4925a 75%,
-    #e8c9a0 100%
+    #e8c9a8 0%,
+    #c9986a 28%,
+    #a07242 55%,
+    #8a6845 78%,
+    #b8895c 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -35,7 +37,14 @@ body {
 }
 
 .rose-gradient {
-  background: linear-gradient(135deg, #e8c9a0 0%, #c4925a 50%, #a07242 100%);
+  background: linear-gradient(
+    135deg,
+    #e8c9a8 0%,
+    #c9986a 28%,
+    #a07242 55%,
+    #8a6845 78%,
+    #b8895c 100%
+  );
 }
 
 .rose-soft-gradient {

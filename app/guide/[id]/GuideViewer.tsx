@@ -25,7 +25,7 @@ export function GuideViewer({ id, title, html }: Props) {
   }, [id]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#fbfbfd" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#14110d" }}>
       <Header
         rightSlot={
           <span
@@ -33,24 +33,28 @@ export function GuideViewer({ id, title, html }: Props) {
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontSize: 13,
-              color: "#8a7e76",
+              color: "rgba(244,236,224,0.55)",
             }}
           >
             Saved automatically
           </span>
         }
       />
-      <iframe
-        title={title || "Sentiero guide"}
-        srcDoc={html}
-        sandbox="allow-scripts allow-same-origin allow-forms"
-        style={{
-          flex: 1,
-          width: "100%",
-          border: "none",
-          background: "#fbfbfd",
-        }}
-      />
+      <div style={{ flex: 1, minHeight: 0, padding: "0 16px 16px" }}>
+        <iframe
+          title={title || "Sentiero guide"}
+          srcDoc={html}
+          sandbox="allow-scripts allow-same-origin allow-forms"
+          style={{
+            width: "100%",
+            height: "100%",
+            border: "none",
+            borderRadius: 16,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
+            background: "#fbf6ee",
+          }}
+        />
+      </div>
     </div>
   );
 }

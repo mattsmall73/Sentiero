@@ -66,7 +66,7 @@ export function RecentGuides() {
   if (!guides || guides.length === 0) return null;
 
   return (
-    <section style={{ padding: "48px 32px 64px", background: "#fbfbfd" }}>
+    <section style={{ padding: "48px 32px 64px", background: "#14110d" }}>
       <div style={{ maxWidth: 520, margin: "0 auto" }}>
         <div
           style={{
@@ -74,7 +74,7 @@ export function RecentGuides() {
             fontFamily: "Inter, sans-serif",
             fontWeight: 500,
             fontSize: 13,
-            color: "#6e6263",
+            color: "rgba(244,236,224,0.7)",
             marginBottom: 16,
           }}
         >
@@ -85,7 +85,7 @@ export function RecentGuides() {
             <li
               key={g.id}
               style={{
-                borderTop: "0.5px solid rgba(42,37,34,0.08)",
+                borderTop: "1px solid rgba(255,255,255,0.1)",
                 padding: "12px 0",
               }}
             >
@@ -105,7 +105,7 @@ export function RecentGuides() {
                     fontFamily: "Inter, sans-serif",
                     fontWeight: 400,
                     fontSize: 14,
-                    color: "#2a2522",
+                    color: "#f4ece0",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
@@ -118,7 +118,7 @@ export function RecentGuides() {
                     fontFamily: "Inter, sans-serif",
                     fontWeight: 400,
                     fontSize: 12,
-                    color: "#8a7e76",
+                    color: "rgba(244,236,224,0.46)",
                     whiteSpace: "nowrap",
                   }}
                 >

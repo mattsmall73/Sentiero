@@ -203,7 +203,7 @@ export default function AnswerClient(props: Props) {
 
   return (
     <div className="exam-root">
-      <div className="app">
+      <div className="app exam-sit">
         <div className="exam-header">
           <div className="exam-title">{props.paperTitle}</div>
           <div
