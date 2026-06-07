@@ -19,7 +19,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
           <div className="card">
             <h2>Database not set up yet</h2>
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               Set <code>POSTGRES_URL</code> and redeploy.
             </p>
           </div>
@@ -31,7 +31,12 @@ export default async function Page({ params }: { params: { id: string } }) {
   const row = await getSessionWithPaper(id);
   if (!row) notFound();
 
-  if (!row.session.submitted_at || !row.session.results_html) {
+  // submitted_at is the authoritative signal that a paper was submitted and
+  // marked: the submit route sets it atomically alongside marking_results and
+  // results_html. Key the not-marked screen on it alone — a session that HAS
+  // been submitted must never be told it hasn't been. Folding results_html into
+  // this same guard is what let a marked row fall through to "not submitted".
+  if (!row.session.submitted_at) {
     return (
       <div className="exam-root">
         <div className="app">
@@ -40,7 +45,7 @@ export default async function Page({ params }: { params: { id: string } }) {
             <h1>Not marked yet</h1>
           </div>
           <div className="card">
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               This paper hasn&apos;t been submitted for marking. Go back and finish answering.
             </p>
             <div style={{ marginTop: 16 }}>
@@ -50,6 +55,38 @@ export default async function Page({ params }: { params: { id: string } }) {
                 style={{ display: "inline-block", textDecoration: "none", padding: "12px 24px" }}
               >
                 Back to the paper
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Submitted and marked, but the rendered artefact is missing. This should not
+  // happen — submitSession writes results_html in the same statement as
+  // submitted_at — but if it ever does, tell the truth (the paper WAS marked)
+  // and offer a reload rather than the misleading "you haven't submitted" copy.
+  if (!row.session.results_html) {
+    return (
+      <div className="exam-root">
+        <div className="app">
+          <div className="brand">
+            <div className="brand-mark">Sentiero · Exam Practice</div>
+            <h1>Marked — loading your results</h1>
+          </div>
+          <div className="card">
+            <p style={{ color: "var(--panel-muted)" }}>
+              This paper has been submitted and marked, but the results didn&apos;t come through.
+              Refresh to try again.
+            </p>
+            <div style={{ marginTop: 16 }}>
+              <a
+                href={`/exam/${id}/results`}
+                className="exam-btn primary"
+                style={{ display: "inline-block", textDecoration: "none", padding: "12px 24px" }}
+              >
+                Refresh results
               </a>
             </div>
           </div>

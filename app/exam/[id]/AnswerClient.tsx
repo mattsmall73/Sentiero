@@ -166,6 +166,14 @@ export default function AnswerClient(props: Props) {
         setSubmitting(false);
         return;
       }
+      // Invalidate the client-side Router Cache before navigating. The results
+      // route may already be cached from a pre-submit visit (the confirm modal
+      // invites the student to "come back to the results any time at this URL"),
+      // where it correctly showed "Not marked yet". Without this refresh, the
+      // push re-serves that stale not-marked RSC even though the row is now
+      // fully marked. force-dynamic only governs the server render, not the
+      // client cache, so the read has to be busted here.
+      router.refresh();
       router.push(`/exam/${props.sessionId}/results`);
     } catch (err) {
       clearInterval(tick);
@@ -224,7 +232,7 @@ export default function AnswerClient(props: Props) {
               marginBottom: 18,
               fontFamily: "Fraunces, Georgia, serif",
               fontStyle: "italic",
-              color: "var(--muted)",
+              color: "var(--on-dark-muted)",
             }}
           >
             For {props.userName}

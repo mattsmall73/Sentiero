@@ -38,6 +38,10 @@ export type MarkedQuestion = {
   number: string;
   mark_awarded: number;
   mark_available: number;
+  // false when the student left the question blank (a skip, not a gap). The
+  // renderer also treats an empty answer as not attempted, so this stays
+  // optional for sessions marked before the field existed.
+  attempted?: boolean;
   what_worked: string;
   what_the_scheme_wanted: string;
   next_step: string;
