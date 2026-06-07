@@ -236,8 +236,13 @@ ${questionsHtml}
 </html>`;
 }
 
-function escapeHtml(s: string): string {
-  return s
+function escapeHtml(s: unknown): string {
+  // Coerce first: the marking JSON comes from the model, so a field can arrive
+  // undefined (an omitted key) or as a number (e.g. a numeric question number).
+  // Calling String.prototype.replace on those throws, and this renderer runs in
+  // the submit route outside its try/catch, so an uncaught throw here aborts the
+  // POST before the results are saved and the paper is left unmarked.
+  return String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
