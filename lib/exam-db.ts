@@ -192,13 +192,20 @@ export async function updateSessionProgress(input: {
 
 export async function submitSession(input: {
   session_id: string;
+  answers: Answers;
   marking_results: MarkingResults;
   results_html: string;
 }): Promise<void> {
   await ensureSchema();
+  // Persist the exact answers that were marked in the same statement that locks
+  // the session, so a typed answer always survives even when a quick submit
+  // beats the debounced autosave. This is a content-independent write (it does
+  // not branch on what the answers contain), so the answer path stays free of
+  // any "attempted" knowledge.
   await sql`
     UPDATE practice_sessions
-    SET marking_results = ${JSON.stringify(input.marking_results)}::jsonb,
+    SET answers = ${JSON.stringify(input.answers)}::jsonb,
+        marking_results = ${JSON.stringify(input.marking_results)}::jsonb,
         results_html = ${input.results_html},
         submitted_at = now(),
         updated_at = now()

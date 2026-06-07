@@ -44,6 +44,24 @@ export function renderResultsHtml(input: {
       const questionText = parsedQ?.text ?? "";
       const answer = (answers[q.number] ?? "").trim();
       const closing = q.closing_line && q.closing_line.trim() ? q.closing_line.trim() : "";
+      // "Not attempted" is a pure, read-only derivation from the saved answer:
+      // an empty saved answer is a skip. It is computed only here, at display
+      // time, reads nothing from the marking result, and has zero bearing on how
+      // answers are saved, submitted, or read. A skip shows the plain label and
+      // no coaching - explaining a blank only draws attention to it.
+      const notAttempted = answer.length === 0;
+      const feedbackHtml = notAttempted
+        ? `
+    <div class="feedback not-attempted">
+      <p class="feedback-status">Not attempted</p>
+    </div>`
+        : `
+    <div class="feedback">
+      <p class="feedback-line worked">${escapeHtml(q.what_worked)}</p>
+      <p class="feedback-line scheme">${escapeHtml(q.what_the_scheme_wanted)}</p>
+      <p class="feedback-line next">${escapeHtml(q.next_step)}</p>
+      ${closing ? `<p class="feedback-line closing">${escapeHtml(closing)}</p>` : ""}
+    </div>`;
       return `
   <article class="question">
     <header class="question-header">
@@ -58,13 +76,7 @@ export function renderResultsHtml(input: {
     <div class="answer-block">
       <div class="answer-label">Your answer</div>
       <div class="answer-body">${answer ? escapeHtml(answer) : `<em class="empty">No answer given.</em>`}</div>
-    </div>
-    <div class="feedback">
-      <p class="feedback-line worked">${escapeHtml(q.what_worked)}</p>
-      <p class="feedback-line scheme">${escapeHtml(q.what_the_scheme_wanted)}</p>
-      <p class="feedback-line next">${escapeHtml(q.next_step)}</p>
-      ${closing ? `<p class="feedback-line closing">${escapeHtml(closing)}</p>` : ""}
-    </div>
+    </div>${feedbackHtml}
   </article>`;
     })
     .join("\n");
@@ -151,6 +163,7 @@ export function renderResultsHtml(input: {
   .feedback p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: var(--panel-ink); }
   .feedback p:last-child { margin-bottom: 0; }
   .feedback-line.closing { color: var(--accent-panel-text); font-style: italic; font-size: 16px; }
+  .feedback-status { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--panel-muted); margin: 0; }
   .footer-note {
     background: rgba(160,114,66,0.1);
     border: 1px solid var(--line);
@@ -204,8 +217,14 @@ ${questionsHtml}
 </html>`;
 }
 
-function escapeHtml(s: string): string {
-  return s
+function escapeHtml(s: unknown): string {
+  // Coerce first: the marking JSON comes from the model, so a coaching field can
+  // arrive undefined (an omitted key) or non-string (e.g. a numeric question
+  // number). Calling String.prototype.replace on those throws, and the renderer
+  // runs in the submit route, so an uncaught throw here would abort the POST
+  // before the results are saved - the exact failure that left blank-question
+  // papers stuck on "Not marked yet". Coercing keeps the render total.
+  return String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
