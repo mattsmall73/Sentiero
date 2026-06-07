@@ -150,7 +150,7 @@ export function UploadCard() {
         <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 15, color: "#39322b", margin: "0 0 6px" }}>
           {fileLabel ?? "Drop a file here"}
         </div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 13, color: "#8a8073", margin: "0 0 24px" }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 13, color: "#6e6356", margin: "0 0 24px" }}>
           PDF, image, Word, or plain text
         </div>
 
@@ -193,7 +193,7 @@ export function UploadCard() {
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontSize: 12,
-              color: "#8a8073",
+              color: "#6e6356",
               cursor: "pointer",
               textDecoration: "underline",
               textDecorationColor: "rgba(138,126,118,0.4)",
@@ -260,7 +260,7 @@ export function UploadCard() {
           }}
         >
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>
               Who&apos;s this for?
             </span>
             <input
@@ -281,7 +281,7 @@ export function UploadCard() {
           </label>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>
               How long have you got?
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -348,7 +348,7 @@ export function UploadCard() {
                       background: "#f3ece1",
                     }}
                   />
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>hours</span>
+                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>hours</span>
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <input
@@ -369,7 +369,7 @@ export function UploadCard() {
                       background: "#f3ece1",
                     }}
                   />
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#8a8073" }}>minutes</span>
+                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>minutes</span>
                 </label>
               </div>
             )}

@@ -19,7 +19,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
           <div className="card">
             <h2>Database not set up yet</h2>
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               Set <code>POSTGRES_URL</code> and redeploy.
             </p>
           </div>
@@ -40,7 +40,7 @@ export default async function Page({ params }: { params: { id: string } }) {
             <h1>Not marked yet</h1>
           </div>
           <div className="card">
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               This paper hasn&apos;t been submitted for marking. Go back and finish answering.
             </p>
             <div style={{ marginTop: 16 }}>
