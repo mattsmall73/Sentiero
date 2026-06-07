@@ -18,7 +18,10 @@
   --surround: #14110d;
   --panel: #fbf6ee;
   --panel-ink: #39322b;
-  --panel-muted: #8a8073;
+  /* Warm-dark muted for small/secondary text on the cream panels. Darkened
+   * from the old #8a8073 (~3.6:1, failing) to clear WCAG AA on both the panel
+   * (#fbf6ee) and the field (#f3ece1). Gold is reserved for accents only. */
+  --panel-muted: #6e6356;
   --panel-line: rgba(57, 50, 43, 0.12);
   --field: #f3ece1;
   --field-line: rgba(57, 50, 43, 0.18);
@@ -42,7 +45,9 @@
   --btn-shadow: 0 2px 10px rgba(160, 114, 66, 0.28);
   --panel-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
   --radius: 16px;
-  --done: #5a7a5a;
+  /* Deepened from #5a7a5a so the small "ready" status line clears WCAG AA on
+   * the cream field; still reads as the forest green for the timer-done state. */
+  --done: #4f6f4f;
   --done-soft: #e3ebe0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: var(--on-dark);

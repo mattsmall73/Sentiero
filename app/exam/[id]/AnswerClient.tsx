@@ -224,7 +224,7 @@ export default function AnswerClient(props: Props) {
               marginBottom: 18,
               fontFamily: "Fraunces, Georgia, serif",
               fontStyle: "italic",
-              color: "var(--muted)",
+              color: "var(--on-dark-muted)",
             }}
           >
             For {props.userName}

@@ -236,7 +236,7 @@ export default function Page() {
                 <span />
                 <span />
               </div>
-              <div style={{ marginTop: 18, fontSize: 13, color: "var(--muted)" }}>
+              <div style={{ marginTop: 18, fontSize: 13, color: "var(--panel-muted)" }}>
                 {SLOTS.map((slot) => {
                   const s = slots[slot];
                   const line = slotStateLine(slot);
@@ -259,14 +259,15 @@ export default function Page() {
               {SLOTS.map((slot) => {
                 const s = slots[slot];
                 const line = slotStateLine(slot);
+                // Filenames and progress are small secondary text on a cream
+                // panel: warm-dark muted, not pale gold (which fails contrast
+                // here). "ready" keeps the done-green; errors take the panel ink.
                 const stateColor =
                   line.tone === "done"
                     ? "var(--done)"
                     : line.tone === "error"
-                      ? "var(--accent)"
-                      : line.tone === "accent"
-                        ? "var(--accent)"
-                        : "var(--muted)";
+                      ? "var(--panel-ink)"
+                      : "var(--panel-muted)";
                 return (
                   <div
                     key={slot}
@@ -292,7 +293,7 @@ export default function Page() {
                             clearFile(slot);
                           }}
                           style={{
-                            color: "var(--muted)",
+                            color: "var(--panel-muted)",
                             cursor: "pointer",
                             textDecoration: "underline",
                             textDecorationStyle: "dotted",
@@ -317,7 +318,7 @@ export default function Page() {
                 );
               })}
 
-              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10, fontStyle: "italic" }}>
+              <div style={{ fontSize: 12, color: "var(--panel-muted)", marginTop: 10, fontStyle: "italic" }}>
                 PDFs, Word docs, plain text, or images. Files upload securely and are read on the
                 server, so big PDFs work fine on any device.
               </div>
@@ -380,7 +381,7 @@ export default function Page() {
             <div className="card">
               <div className="step-label">Optional</div>
               <h2>Your name</h2>
-              <p style={{ fontSize: 14, color: "var(--muted)", marginTop: -8, marginBottom: 14 }}>
+              <p style={{ fontSize: 14, color: "var(--panel-muted)", marginTop: -8, marginBottom: 14 }}>
                 Goes on the &quot;For [name]&quot; line on the results.
               </p>
               <input

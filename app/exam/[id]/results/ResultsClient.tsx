@@ -50,14 +50,14 @@ export default function ResultsClient(props: Props) {
   }
 
   return (
-    <div className="exam-results" style={{ background: "var(--bg)", minHeight: "100vh" }}>
+    <div className="exam-results" style={{ background: "var(--surround)", minHeight: "100vh" }}>
       <div
         style={{
           position: "sticky",
           top: 0,
-          background: "var(--bg)",
+          background: "var(--surround)",
           padding: "12px 16px",
-          borderBottom: "1px solid var(--line)",
+          borderBottom: "1px solid rgba(244, 236, 224, 0.12)",
           display: "flex",
           gap: 10,
           alignItems: "center",
@@ -69,7 +69,7 @@ export default function ResultsClient(props: Props) {
           href="/"
           style={{
             fontSize: 13,
-            color: "var(--muted)",
+            color: "var(--on-dark-muted)",
             textDecoration: "underline",
             textDecorationStyle: "dotted",
             textUnderlineOffset: 3,
@@ -102,7 +102,7 @@ export default function ResultsClient(props: Props) {
       <iframe
         srcDoc={props.html}
         title="Results"
-        style={{ width: "100%", height: "calc(100vh - 56px)", border: "none", background: "var(--bg)" }}
+        style={{ width: "100%", height: "calc(100vh - 56px)", border: "none", background: "var(--surround)" }}
       />
     </div>
   );
