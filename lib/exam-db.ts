@@ -196,13 +196,21 @@ export async function updateSessionProgress(input: {
 
 export async function submitSession(input: {
   session_id: string;
+  answers: Answers;
   marking_results: MarkingResults;
   results_html: string;
 }): Promise<void> {
   await ensureSchema();
+  // Persist the answers that were actually marked in the same statement that
+  // locks the session. Autosave is debounced (and can be skipped entirely by a
+  // quick submit), so the row's answers column could otherwise be empty or
+  // stale even after a successful mark - which left "Back to the paper" showing
+  // an empty box and made the saved answers inconsistent with the results. The
+  // submit route always knows the final answers, so write them here too.
   await sql`
     UPDATE practice_sessions
-    SET marking_results = ${JSON.stringify(input.marking_results)}::jsonb,
+    SET answers = ${JSON.stringify(input.answers)}::jsonb,
+        marking_results = ${JSON.stringify(input.marking_results)}::jsonb,
         results_html = ${input.results_html},
         submitted_at = now(),
         updated_at = now()

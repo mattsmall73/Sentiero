@@ -153,11 +153,20 @@ export default function AnswerClient(props: Props) {
       setSubmitIdx((i) => Math.min(i + 1, SUBMIT_MESSAGES.length - 1));
     }, 8000);
 
+    // Read the answers straight from the ref so we submit exactly what is on
+    // screen, never a stale render's copy. Cancel the pending debounced autosave
+    // and flush these same answers first: a late autosave is guarded by
+    // submitted_at IS NULL and would otherwise be a no-op, leaving the row
+    // empty if the student typed and submitted inside the debounce window.
+    const finalAnswers = answersRef.current;
+    if (saveAnswersTimeout.current) clearTimeout(saveAnswersTimeout.current);
+    await persist({ answers: finalAnswers });
+
     try {
       const res = await fetch("/api/exam/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: props.sessionId, answers }),
+        body: JSON.stringify({ session_id: props.sessionId, answers: finalAnswers }),
       });
       const json = await res.json();
       clearInterval(tick);
