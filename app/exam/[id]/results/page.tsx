@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getSessionWithPaper } from "@/lib/exam-db";
+import { getSessionWithPaper, debugReadSessionState } from "@/lib/exam-db";
 import ResultsClient from "./ResultsClient";
 import "../../exam.css";
 
@@ -7,7 +7,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Adapted down to Next 14: params are synchronous (Help! awaited a Promise).
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { debug?: string };
+}) {
   const { id } = params;
   if (!process.env.POSTGRES_URL) {
     return (
@@ -29,6 +35,68 @@ export default async function Page({ params }: { params: { id: string } }) {
   }
 
   const row = await getSessionWithPaper(id);
+
+  // TEMPORARY runtime trace. Active only with ?debug=1. Reports exactly what the
+  // page reads (via getSessionWithPaper) next to the raw driver row (via a
+  // separate diagnostic query) and the deployed commit + DB host, so we can see
+  // whether the read object's submitted_at differs from the column, which guard
+  // branch would be taken, and whether the deployed code/DB are what we expect.
+  if (searchParams?.debug === "1") {
+    const dbg = await debugReadSessionState(id);
+    const submittedAt = row?.session.submitted_at;
+    const resultsHtml = row?.session.results_html;
+    const branch = !row
+      ? "notFound"
+      : !row.session.submitted_at
+        ? "NOT-MARKED-YET"
+        : !row.session.results_html
+          ? "MARKED-LOADING"
+          : "RESULTS-CLIENT";
+    const report = {
+      params_id: id,
+      deployed_commit: process.env.VERCEL_GIT_COMMIT_SHA ?? "(unset)",
+      deployed_branch: process.env.VERCEL_GIT_COMMIT_REF ?? "(unset)",
+      db_host: dbg.host,
+      page_read: {
+        getSessionWithPaper_returned: row ? "row" : "null",
+        "session.submitted_at value": submittedAt ?? null,
+        "session.submitted_at typeof": typeof submittedAt,
+        "session.submitted_at truthy": Boolean(submittedAt),
+        "session.results_html typeof": typeof resultsHtml,
+        "session.results_html length": typeof resultsHtml === "string" ? resultsHtml.length : null,
+        "session.results_html first20":
+          typeof resultsHtml === "string" ? resultsHtml.slice(0, 20) : null,
+      },
+      raw_driver_row: dbg,
+      guard_branch_taken: branch,
+    };
+    // Also emit to the server log for anyone reading Vercel logs.
+    console.error("[results-debug]", JSON.stringify(report));
+    return (
+      <div className="exam-root">
+        <div className="app">
+          <div className="brand">
+            <div className="brand-mark">Sentiero · Exam Practice</div>
+            <h1>Results debug</h1>
+          </div>
+          <div className="card">
+            <pre
+              style={{
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                fontSize: 12,
+                color: "var(--panel-ink)",
+                margin: 0,
+              }}
+            >
+              {JSON.stringify(report, null, 2)}
+            </pre>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!row) notFound();
 
   // submitted_at is the authoritative signal that a paper was submitted and

@@ -226,3 +226,37 @@ export async function getPaper(paper_id: string): Promise<PaperRow | null> {
   `;
   return rows[0] ?? null;
 }
+
+// TEMPORARY diagnostic read. Returns the raw submit-state columns for a session
+// straight from the driver (no mapping layer), plus the connection host, so the
+// results page can compare what the page actually reads against the raw row and
+// rule out a mapping/driver/replica mismatch. Remove once the trace is done.
+export async function debugReadSessionState(session_id: string): Promise<{
+  found: boolean;
+  raw: Record<string, unknown> | null;
+  host: string;
+}> {
+  await ensureSchema();
+  const { rows } = await sql`
+    SELECT
+      id,
+      submitted_at,
+      pg_typeof(submitted_at)::text AS submitted_at_pgtype,
+      (submitted_at IS NOT NULL) AS submitted_at_is_set,
+      (results_html IS NOT NULL) AS has_results_html,
+      octet_length(results_html) AS results_html_len,
+      (marking_results IS NOT NULL) AS has_marking,
+      (answers IS NOT NULL AND answers::text <> '{}') AS has_answer
+    FROM practice_sessions
+    WHERE id = ${session_id}
+    LIMIT 1
+  `;
+  let host = "unknown";
+  try {
+    const url = process.env.POSTGRES_URL ?? "";
+    host = url ? new URL(url).host : "POSTGRES_URL-empty";
+  } catch {
+    host = "unparseable";
+  }
+  return { found: rows.length > 0, raw: rows[0] ?? null, host };
+}
