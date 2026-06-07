@@ -5,6 +5,15 @@ import "../../exam.css";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// The session is read via @vercel/postgres, whose queries run over HTTP and are
+// otherwise eligible for the Next.js Data Cache. A pre-submit visit to this URL
+// (the confirm modal invites the student to return here) caches the "unmarked"
+// read, and that stale cached response is then served after marking - the real
+// cause of the persistent "Not marked yet" even though the row is marked in the
+// database. force-dynamic alone did not bypass it for these queries, so force
+// every fetch in this route fresh: the guard then always sees the live
+// submitted_at / results_html.
+export const fetchCache = "force-no-store";
 
 // Adapted down to Next 14: params are synchronous (Help! awaited a Promise).
 export default async function Page({ params }: { params: { id: string } }) {
@@ -19,7 +28,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
           <div className="card">
             <h2>Database not set up yet</h2>
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               Set <code>POSTGRES_URL</code> and redeploy.
             </p>
           </div>
@@ -40,7 +49,7 @@ export default async function Page({ params }: { params: { id: string } }) {
             <h1>Not marked yet</h1>
           </div>
           <div className="card">
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               This paper hasn&apos;t been submitted for marking. Go back and finish answering.
             </p>
             <div style={{ marginTop: 16 }}>

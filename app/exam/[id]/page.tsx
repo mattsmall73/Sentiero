@@ -5,6 +5,11 @@ import "../exam.css";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Same Data Cache hazard as the results route: the session is read via
+// @vercel/postgres over HTTP, so without this an earlier cached read can serve
+// stale answers (an empty/old answer box on "back to the paper") or a stale
+// submitted_at. Force the read fresh so the paper always reflects the database.
+export const fetchCache = "force-no-store";
 
 // Adapted down to Next 14: params are synchronous here (Help! was on Next 16,
 // where params is a Promise that must be awaited).
@@ -20,7 +25,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
           <div className="card">
             <h2>Database not set up yet</h2>
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               Set <code>POSTGRES_URL</code>, redeploy, and this page will load.
             </p>
           </div>
