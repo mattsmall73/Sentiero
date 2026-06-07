@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
           <div className="card">
             <h2>Database not set up yet</h2>
-            <p style={{ color: "var(--muted)" }}>
+            <p style={{ color: "var(--panel-muted)" }}>
               Set <code>POSTGRES_URL</code>, redeploy, and this page will load.
             </p>
           </div>

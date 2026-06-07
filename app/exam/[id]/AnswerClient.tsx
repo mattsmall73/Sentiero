@@ -153,11 +153,20 @@ export default function AnswerClient(props: Props) {
       setSubmitIdx((i) => Math.min(i + 1, SUBMIT_MESSAGES.length - 1));
     }, 8000);
 
+    // Read the answers straight from the ref so we submit exactly what is on
+    // screen, never a stale render's copy. Cancel the pending debounced autosave
+    // and flush these same answers first: a late autosave is guarded by
+    // submitted_at IS NULL and would otherwise be a no-op, leaving the row
+    // empty if the student typed and submitted inside the debounce window.
+    const finalAnswers = answersRef.current;
+    if (saveAnswersTimeout.current) clearTimeout(saveAnswersTimeout.current);
+    await persist({ answers: finalAnswers });
+
     try {
       const res = await fetch("/api/exam/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: props.sessionId, answers }),
+        body: JSON.stringify({ session_id: props.sessionId, answers: finalAnswers }),
       });
       const json = await res.json();
       clearInterval(tick);
@@ -166,7 +175,16 @@ export default function AnswerClient(props: Props) {
         setSubmitting(false);
         return;
       }
-      router.push(`/exam/${props.sessionId}/results`);
+      // Land on the freshly marked results with no transient "Not marked yet"
+      // flash. A client-side router.push can re-serve a stale not-marked RSC from
+      // the Router Cache (the confirm modal invites the student to "come back to
+      // the results any time at this URL", and force-dynamic governs only the
+      // server render, not the client cache); router.refresh() only partially
+      // cleared it. A full-document navigation bypasses the Router Cache outright
+      // and always hits the force-dynamic results route fresh, so the student
+      // sees the "Marking" state straight through to the marked results. Keep
+      // submitting=true so the spinner holds until the browser navigates.
+      window.location.assign(`/exam/${props.sessionId}/results`);
     } catch (err) {
       clearInterval(tick);
       const message = err instanceof Error ? err.message : "Network error";
@@ -224,7 +242,7 @@ export default function AnswerClient(props: Props) {
               marginBottom: 18,
               fontFamily: "Fraunces, Georgia, serif",
               fontStyle: "italic",
-              color: "var(--muted)",
+              color: "var(--on-dark-muted)",
             }}
           >
             For {props.userName}

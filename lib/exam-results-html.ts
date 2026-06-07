@@ -2,8 +2,9 @@ import { MarkingResults, ParsedPaper, ParsedQuestion } from "./exam-db";
 
 // Ported from Help!'s lib/resultsHtml.ts. Renders a self-contained, downloadable
 // results page. No swearing to strip here. Copy strings (e.g. "For [name]",
-// "Highest-leverage next step", "on the clock") are a straight port and flagged
-// for the family's voice pass.
+// "Next best thing to do", "Not attempted", "on the clock") are flagged for the
+// family's voice pass - "Next best thing to do" is the working candidate that
+// replaced the old "Highest-leverage next step" optimisation-voice heading.
 
 export function renderResultsHtml(input: {
   paper_title: string;
@@ -44,6 +45,42 @@ export function renderResultsHtml(input: {
       const questionText = parsedQ?.text ?? "";
       const answer = (answers[q.number] ?? "").trim();
       const closing = q.closing_line && q.closing_line.trim() ? q.closing_line.trim() : "";
+      // A blank answer is a skip, not a gap. Treat it as not attempted and show
+      // only the plain "Not attempted" label - no coaching, no affirmation, no
+      // explanation of why the skip was acceptable. Explaining a blank still
+      // draws attention to it; silence treats the choice as unremarkable. The
+      // model still grasps internally that a permitted skip is legitimate (so it
+      // never penalises or mis-coaches it) - we drop the output sentence, not the
+      // logic. The model signals a skip via attempted=false; an empty answer is a
+      // robust fallback for sessions marked before that field existed.
+      const notAttempted = q.attempted === false || answer.length === 0;
+
+      let feedbackHtml: string;
+      if (notAttempted) {
+        feedbackHtml = `
+    <div class="feedback not-attempted">
+      <p class="feedback-status">Not attempted</p>
+    </div>`;
+      } else {
+        const lines: string[] = [];
+        if (q.what_worked && q.what_worked.trim()) {
+          lines.push(`<p class="feedback-line worked">${escapeHtml(q.what_worked.trim())}</p>`);
+        }
+        if (q.what_the_scheme_wanted && q.what_the_scheme_wanted.trim()) {
+          lines.push(`<p class="feedback-line scheme">${escapeHtml(q.what_the_scheme_wanted.trim())}</p>`);
+        }
+        if (q.next_step && q.next_step.trim()) {
+          lines.push(`<p class="feedback-line next">${escapeHtml(q.next_step.trim())}</p>`);
+        }
+        if (closing) {
+          lines.push(`<p class="feedback-line closing">${escapeHtml(closing)}</p>`);
+        }
+        feedbackHtml = `
+    <div class="feedback">
+      ${lines.join("\n      ")}
+    </div>`;
+      }
+
       return `
   <article class="question">
     <header class="question-header">
@@ -58,13 +95,7 @@ export function renderResultsHtml(input: {
     <div class="answer-block">
       <div class="answer-label">Your answer</div>
       <div class="answer-body">${answer ? escapeHtml(answer) : `<em class="empty">No answer given.</em>`}</div>
-    </div>
-    <div class="feedback">
-      <p class="feedback-line worked">${escapeHtml(q.what_worked)}</p>
-      <p class="feedback-line scheme">${escapeHtml(q.what_the_scheme_wanted)}</p>
-      <p class="feedback-line next">${escapeHtml(q.next_step)}</p>
-      ${closing ? `<p class="feedback-line closing">${escapeHtml(closing)}</p>` : ""}
-    </div>
+    </div>${feedbackHtml}
   </article>`;
     })
     .join("\n");
@@ -86,7 +117,7 @@ export function renderResultsHtml(input: {
    * front door and the tool pages. Fraunces is the hero heading only; panel
    * text is plain Inter. */
   :root {
-    --surround: #14110d; --panel: #fbf6ee; --panel-ink: #39322b; --panel-muted: #8a8073;
+    --surround: #14110d; --panel: #fbf6ee; --panel-ink: #39322b; --panel-muted: #6e6356;
     --field: #f3ece1; --line: rgba(57,50,43,0.12);
     --on-dark: #f4ece0; --on-dark-muted: rgba(244,236,224,0.70);
     --accent-deep: #e3b685; --accent-panel-text: #8a6845;
@@ -151,18 +182,25 @@ export function renderResultsHtml(input: {
   .feedback p { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: var(--panel-ink); }
   .feedback p:last-child { margin-bottom: 0; }
   .feedback-line.closing { color: var(--accent-panel-text); font-style: italic; font-size: 16px; }
+  .feedback-status { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--panel-muted); margin: 0; }
+  /* This is the one DARK panel among the results surfaces: a translucent gold
+   * wash that sits almost black over the dark surround. Its text must therefore
+   * be light-on-dark (the same readable cream the surround uses), not the cream
+   * panels' warm-dark ink, and its label takes the dark-surround gold accent,
+   * not the light-panel gold. Earlier contrast sweeps fixed the cream panels and
+   * missed this one. */
   .footer-note {
     background: rgba(160,114,66,0.1);
-    border: 1px solid var(--line);
+    border: 1px solid rgba(244,236,224,0.12);
     border-radius: 16px;
     padding: 20px 24px;
     margin-top: 28px;
     margin-bottom: 20px;
     font-size: 15px;
     line-height: 1.6;
-    color: var(--panel-ink);
+    color: var(--on-dark);
   }
-  .footer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent-panel-text); font-weight: 600; margin-bottom: 6px; }
+  .footer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent-deep); font-weight: 600; margin-bottom: 6px; }
   @media (max-width: 480px) {
     h1 { font-size: 26px; }
     .total-mark .value { font-size: 30px; }
@@ -196,7 +234,7 @@ export function renderResultsHtml(input: {
 ${questionsHtml}
 
   <div class="footer-note">
-    <div class="footer-label">Highest-leverage next step</div>
+    <div class="footer-label">Next best thing to do</div>
     <div>${escapeHtml(marking.headline_next_step)}</div>
   </div>
 </div>
@@ -204,8 +242,13 @@ ${questionsHtml}
 </html>`;
 }
 
-function escapeHtml(s: string): string {
-  return s
+function escapeHtml(s: unknown): string {
+  // Coerce first: the marking JSON comes from the model, so a field can arrive
+  // undefined (an omitted key) or as a number (e.g. a numeric question number).
+  // Calling String.prototype.replace on those throws, and this renderer runs in
+  // the submit route outside its try/catch, so an uncaught throw here aborts the
+  // POST before the results are saved and the paper is left unmarked.
+  return String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

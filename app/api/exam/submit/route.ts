@@ -96,19 +96,43 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const html = renderResultsHtml({
-    paper_title: row.paper.title ?? row.paper.parsed_structure.paper_title ?? "Paper",
-    user_name: row.session.user_name,
-    practised_at: new Date(row.session.created_at),
-    elapsed_seconds: row.session.timer_state?.elapsed_seconds ?? 0,
-    parsed: row.paper.parsed_structure,
-    answers: finalAnswers,
-    marking,
-  });
+  // Normalize the coaching shape so a paper with blank questions always marks,
+  // regardless of model variance under the stricter blank-handling prompt. This
+  // touches no numbers - only the attempted flag and the string coaching fields:
+  // a blank answer is forced to "not attempted", and any omitted/non-string
+  // coaching field defaults to "" so the renderer never receives a bad value.
+  for (const q of marking.questions) {
+    q.attempted = (finalAnswers[q.number] ?? "").trim().length > 0;
+    if (typeof q.what_worked !== "string") q.what_worked = "";
+    if (typeof q.what_the_scheme_wanted !== "string") q.what_the_scheme_wanted = "";
+    if (typeof q.next_step !== "string") q.next_step = "";
+  }
+
+  // Render inside a guard: this used to sit outside any try/catch, so a throw
+  // here (a missing or non-string marking field, which is reachable when a
+  // paper has blank questions) aborted the POST with an unhandled 500 before
+  // the results were saved, leaving the session unmarked and the results page
+  // stuck on "Not marked yet."
+  let html: string;
+  try {
+    html = renderResultsHtml({
+      paper_title: row.paper.title ?? row.paper.parsed_structure.paper_title ?? "Paper",
+      user_name: row.session.user_name,
+      practised_at: new Date(row.session.created_at),
+      elapsed_seconds: row.session.timer_state?.elapsed_seconds ?? 0,
+      parsed: row.paper.parsed_structure,
+      answers: finalAnswers,
+      marking,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: `Could not render results: ${message}` }, { status: 502 });
+  }
 
   try {
     await submitSession({
       session_id: body.session_id,
+      answers: finalAnswers,
       marking_results: marking,
       results_html: html,
     });

@@ -38,6 +38,10 @@ export type MarkedQuestion = {
   number: string;
   mark_awarded: number;
   mark_available: number;
+  // false when the student left the question blank (a skip, not a gap). The
+  // renderer also treats an empty answer as not attempted, so this stays
+  // optional for sessions marked before the field existed.
+  attempted?: boolean;
   what_worked: string;
   what_the_scheme_wanted: string;
   next_step: string;
@@ -192,13 +196,21 @@ export async function updateSessionProgress(input: {
 
 export async function submitSession(input: {
   session_id: string;
+  answers: Answers;
   marking_results: MarkingResults;
   results_html: string;
 }): Promise<void> {
   await ensureSchema();
+  // Persist the answers that were actually marked in the same statement that
+  // locks the session. Autosave is debounced (and can be skipped entirely by a
+  // quick submit), so the row's answers column could otherwise be empty or
+  // stale even after a successful mark - which left "Back to the paper" showing
+  // an empty box and made the saved answers inconsistent with the results. The
+  // submit route always knows the final answers, so write them here too.
   await sql`
     UPDATE practice_sessions
-    SET marking_results = ${JSON.stringify(input.marking_results)}::jsonb,
+    SET answers = ${JSON.stringify(input.answers)}::jsonb,
+        marking_results = ${JSON.stringify(input.marking_results)}::jsonb,
         results_html = ${input.results_html},
         submitted_at = now(),
         updated_at = now()
@@ -213,4 +225,38 @@ export async function getPaper(paper_id: string): Promise<PaperRow | null> {
     FROM papers WHERE id = ${paper_id} LIMIT 1
   `;
   return rows[0] ?? null;
+}
+
+// TEMPORARY diagnostic read. Returns the raw submit-state columns for a session
+// straight from the driver (no mapping layer), plus the connection host, so the
+// results page can compare what the page actually reads against the raw row and
+// rule out a mapping/driver/replica mismatch. Remove once the trace is done.
+export async function debugReadSessionState(session_id: string): Promise<{
+  found: boolean;
+  raw: Record<string, unknown> | null;
+  host: string;
+}> {
+  await ensureSchema();
+  const { rows } = await sql`
+    SELECT
+      id,
+      submitted_at,
+      pg_typeof(submitted_at)::text AS submitted_at_pgtype,
+      (submitted_at IS NOT NULL) AS submitted_at_is_set,
+      (results_html IS NOT NULL) AS has_results_html,
+      octet_length(results_html) AS results_html_len,
+      (marking_results IS NOT NULL) AS has_marking,
+      (answers IS NOT NULL AND answers::text <> '{}') AS has_answer
+    FROM practice_sessions
+    WHERE id = ${session_id}
+    LIMIT 1
+  `;
+  let host = "unknown";
+  try {
+    const url = process.env.POSTGRES_URL ?? "";
+    host = url ? new URL(url).host : "POSTGRES_URL-empty";
+  } catch {
+    host = "unparseable";
+  }
+  return { found: rows.length > 0, raw: rows[0] ?? null, host };
 }
