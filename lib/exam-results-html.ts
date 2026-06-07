@@ -45,20 +45,21 @@ export function renderResultsHtml(input: {
       const questionText = parsedQ?.text ?? "";
       const answer = (answers[q.number] ?? "").trim();
       const closing = q.closing_line && q.closing_line.trim() ? q.closing_line.trim() : "";
-      // A blank answer is a skip, not a gap. Treat it as not attempted and do
-      // not render any coaching - just the plain label, plus the model's brief
-      // affirmation if the rubric made the skip a legitimate choice. The model
-      // signals this via attempted=false; an empty answer is a robust fallback
-      // for sessions marked before that field existed.
+      // A blank answer is a skip, not a gap. Treat it as not attempted and show
+      // only the plain "Not attempted" label - no coaching, no affirmation, no
+      // explanation of why the skip was acceptable. Explaining a blank still
+      // draws attention to it; silence treats the choice as unremarkable. The
+      // model still grasps internally that a permitted skip is legitimate (so it
+      // never penalises or mis-coaches it) - we drop the output sentence, not the
+      // logic. The model signals a skip via attempted=false; an empty answer is a
+      // robust fallback for sessions marked before that field existed.
       const notAttempted = q.attempted === false || answer.length === 0;
 
       let feedbackHtml: string;
       if (notAttempted) {
-        const affirm = q.what_worked && q.what_worked.trim() ? q.what_worked.trim() : "";
         feedbackHtml = `
     <div class="feedback not-attempted">
       <p class="feedback-status">Not attempted</p>
-      ${affirm ? `<p class="feedback-line affirm">${escapeHtml(affirm)}</p>` : ""}
     </div>`;
       } else {
         const lines: string[] = [];
@@ -182,19 +183,24 @@ export function renderResultsHtml(input: {
   .feedback p:last-child { margin-bottom: 0; }
   .feedback-line.closing { color: var(--accent-panel-text); font-style: italic; font-size: 16px; }
   .feedback-status { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--panel-muted); margin: 0; }
-  .feedback-line.affirm { color: var(--panel-muted); margin-top: 8px; }
+  /* This is the one DARK panel among the results surfaces: a translucent gold
+   * wash that sits almost black over the dark surround. Its text must therefore
+   * be light-on-dark (the same readable cream the surround uses), not the cream
+   * panels' warm-dark ink, and its label takes the dark-surround gold accent,
+   * not the light-panel gold. Earlier contrast sweeps fixed the cream panels and
+   * missed this one. */
   .footer-note {
     background: rgba(160,114,66,0.1);
-    border: 1px solid var(--line);
+    border: 1px solid rgba(244,236,224,0.12);
     border-radius: 16px;
     padding: 20px 24px;
     margin-top: 28px;
     margin-bottom: 20px;
     font-size: 15px;
     line-height: 1.6;
-    color: var(--panel-ink);
+    color: var(--on-dark);
   }
-  .footer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent-panel-text); font-weight: 600; margin-bottom: 6px; }
+  .footer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent-deep); font-weight: 600; margin-bottom: 6px; }
   @media (max-width: 480px) {
     h1 { font-size: 26px; }
     .total-mark .value { font-size: 30px; }

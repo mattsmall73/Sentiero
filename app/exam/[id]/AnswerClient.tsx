@@ -175,15 +175,16 @@ export default function AnswerClient(props: Props) {
         setSubmitting(false);
         return;
       }
-      // Invalidate the client-side Router Cache before navigating. The results
-      // route may already be cached from a pre-submit visit (the confirm modal
-      // invites the student to "come back to the results any time at this URL"),
-      // where it correctly showed "Not marked yet". Without this refresh, the
-      // push re-serves that stale not-marked RSC even though the row is now
-      // fully marked. force-dynamic only governs the server render, not the
-      // client cache, so the read has to be busted here.
-      router.refresh();
-      router.push(`/exam/${props.sessionId}/results`);
+      // Land on the freshly marked results with no transient "Not marked yet"
+      // flash. A client-side router.push can re-serve a stale not-marked RSC from
+      // the Router Cache (the confirm modal invites the student to "come back to
+      // the results any time at this URL", and force-dynamic governs only the
+      // server render, not the client cache); router.refresh() only partially
+      // cleared it. A full-document navigation bypasses the Router Cache outright
+      // and always hits the force-dynamic results route fresh, so the student
+      // sees the "Marking" state straight through to the marked results. Keep
+      // submitting=true so the spinner holds until the browser navigates.
+      window.location.assign(`/exam/${props.sessionId}/results`);
     } catch (err) {
       clearInterval(tick);
       const message = err instanceof Error ? err.message : "Network error";
