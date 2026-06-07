@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
   try {
     await submitSession({
       session_id: body.session_id,
+      answers: finalAnswers,
       marking_results: marking,
       results_html: html,
     });

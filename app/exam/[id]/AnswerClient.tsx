@@ -153,11 +153,21 @@ export default function AnswerClient(props: Props) {
       setSubmitIdx((i) => Math.min(i + 1, SUBMIT_MESSAGES.length - 1));
     }, 8000);
 
+    // Submit exactly what is on screen, never a stale render's copy, and flush
+    // the pending debounced autosave first: a late autosave is guarded by
+    // submitted_at IS NULL and would no-op after submit, so without this flush a
+    // student who types and submits inside the 2s debounce window could leave
+    // the answers column empty. This is a plain save-then-submit of whatever was
+    // typed - it does not inspect or branch on the answer content.
+    const finalAnswers = answersRef.current;
+    if (saveAnswersTimeout.current) clearTimeout(saveAnswersTimeout.current);
+    await persist({ answers: finalAnswers });
+
     try {
       const res = await fetch("/api/exam/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: props.sessionId, answers }),
+        body: JSON.stringify({ session_id: props.sessionId, answers: finalAnswers }),
       });
       const json = await res.json();
       clearInterval(tick);
