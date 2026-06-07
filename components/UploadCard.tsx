@@ -115,7 +115,7 @@ export function UploadCard() {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         style={{
-          background: "#fbf6ee",
+          background: "linear-gradient(160deg, #e2e4e6 0%, #c7cbce 55%, #d4d7d9 100%)",
           border: dragging
             ? "1px solid rgba(160,114,66,0.5)"
             : "1px solid rgba(57,50,43,0.12)",
@@ -150,7 +150,7 @@ export function UploadCard() {
         <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 15, color: "#39322b", margin: "0 0 6px" }}>
           {fileLabel ?? "Drop a file here"}
         </div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 13, color: "#6e6356", margin: "0 0 24px" }}>
+        <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 13, color: "#595049", margin: "0 0 24px" }}>
           PDF, image, Word, or plain text
         </div>
 
@@ -193,7 +193,7 @@ export function UploadCard() {
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
               fontSize: 12,
-              color: "#6e6356",
+              color: "#595049",
               cursor: "pointer",
               textDecoration: "underline",
               textDecorationColor: "rgba(138,126,118,0.4)",
@@ -219,7 +219,7 @@ export function UploadCard() {
               fontFamily: "Inter, sans-serif",
               fontSize: 13,
               color: "#39322b",
-              background: "#f3ece1",
+              background: "#d7dadc",
               resize: "vertical",
             }}
           />
@@ -250,7 +250,7 @@ export function UploadCard() {
           style={{
             marginTop: 16,
             padding: "20px 24px",
-            background: "#fbf6ee",
+            background: "linear-gradient(160deg, #e2e4e6 0%, #c7cbce 55%, #d4d7d9 100%)",
             border: "1px solid rgba(57,50,43,0.12)",
             borderRadius: 12,
             boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
@@ -260,7 +260,7 @@ export function UploadCard() {
           }}
         >
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#595049" }}>
               Who&apos;s this for?
             </span>
             <input
@@ -275,13 +275,13 @@ export function UploadCard() {
                 fontFamily: "Inter, sans-serif",
                 fontSize: 13,
                 color: "#39322b",
-                background: "#f3ece1",
+                background: "#d7dadc",
               }}
             />
           </label>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#595049" }}>
               How long have you got?
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -294,7 +294,7 @@ export function UploadCard() {
                     onClick={() => setPresetIndex(active ? null : i)}
                     style={{
                       border: active ? "1px solid #a07242" : "1px solid rgba(57,50,43,0.18)",
-                      background: active ? "#f5ebe0" : "#f3ece1",
+                      background: active ? "#eceef0" : "#d7dadc",
                       color: "#39322b",
                       padding: "6px 12px",
                       borderRadius: 980,
@@ -315,7 +315,7 @@ export function UploadCard() {
                 }}
                 style={{
                   border: precise ? "1px solid #a07242" : "1px solid rgba(57,50,43,0.18)",
-                  background: precise ? "#f5ebe0" : "#f3ece1",
+                  background: precise ? "#eceef0" : "#d7dadc",
                   color: "#39322b",
                   padding: "6px 12px",
                   borderRadius: 980,
@@ -345,10 +345,10 @@ export function UploadCard() {
                       fontFamily: "Inter, sans-serif",
                       fontSize: 13,
                       color: "#39322b",
-                      background: "#f3ece1",
+                      background: "#d7dadc",
                     }}
                   />
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>hours</span>
+                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#595049" }}>hours</span>
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <input
@@ -366,10 +366,10 @@ export function UploadCard() {
                       fontFamily: "Inter, sans-serif",
                       fontSize: 13,
                       color: "#39322b",
-                      background: "#f3ece1",
+                      background: "#d7dadc",
                     }}
                   />
-                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#6e6356" }}>minutes</span>
+                  <span style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#595049" }}>minutes</span>
                 </label>
               </div>
             )}
