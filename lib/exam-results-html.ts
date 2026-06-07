@@ -112,13 +112,16 @@ export function renderResultsHtml(input: {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Dark forest surround, warm cream panels, rose-gold accents — matched to
-   * the Sentiero landing so the marked results stay in the same world as the
-   * front door and the tool pages. Fraunces is the hero heading only; panel
-   * text is plain Inter. */
+  /* Dark forest surround, brushed-silver panels, rose-gold accents — matched to
+   * the Sentiero tool pages so the marked results stay in the same world as the
+   * front door and the tools. Fraunces is the hero heading only; panel text is
+   * plain Inter. --panel is the brushed-silver sheen (Izzie's option C);
+   * --panel-muted is darkened to #595049 to clear WCAG AA on it. */
   :root {
-    --surround: #14110d; --panel: #fbf6ee; --panel-ink: #39322b; --panel-muted: #6e6356;
-    --field: #f3ece1; --line: rgba(57,50,43,0.12);
+    --surround: #14110d;
+    --panel: linear-gradient(160deg, #e2e4e6 0%, #c7cbce 55%, #d4d7d9 100%);
+    --panel-ink: #39322b; --panel-muted: #595049;
+    --field: #d7dadc; --line: rgba(57,50,43,0.12);
     --on-dark: #f4ece0; --on-dark-muted: rgba(244,236,224,0.70);
     --accent-deep: #e3b685; --accent-panel-text: #8a6845;
     --accent-gradient: linear-gradient(135deg, #e8c9a8 0%, #c9986a 28%, #a07242 55%, #8a6845 78%, #b8895c 100%);

@@ -1,6 +1,6 @@
 /*
- * Exam Practice styles — dark forest surround, warm cream panels floating on
- * it, rose-gold on accents only. Scoped under .exam-root / .exam-results so it
+ * Exam Practice styles — dark forest surround, brushed-silver panels floating
+ * on it, rose-gold on accents only. Scoped under .exam-root / .exam-results so it
  * cannot touch the signed-off landing (.sentiero-landing) or the /guide tool.
  *
  * Tokens matched to the live landing (app/landing.css wins over brief direction):
@@ -16,14 +16,20 @@
 .exam-root,
 .exam-results {
   --surround: #14110d;
-  --panel: #fbf6ee;
+  /* Brushed-silver panel surface (Izzie's pick, option C): a static diagonal
+   * sheen suggesting brushed metal, not a live reflection. Replaces the old
+   * cream #fbf6ee. Only ever used as a panel background. */
+  --panel: linear-gradient(160deg, #e2e4e6 0%, #c7cbce 55%, #d4d7d9 100%);
   --panel-ink: #39322b;
-  /* Warm-dark muted for small/secondary text on the cream panels. Darkened
-   * from the old #8a8073 (~3.6:1, failing) to clear WCAG AA on both the panel
-   * (#fbf6ee) and the field (#f3ece1). Gold is reserved for accents only. */
-  --panel-muted: #6e6356;
+  /* Muted small/secondary text. Re-darkened from #6e6356 for the silver
+   * surface: silver is darker than the old cream, so #6e6356 dropped to ~3.6:1
+   * over the gradient's darkest stop (#c7cbce). #595049 clears WCAG AA across
+   * the whole gradient (4.8:1 darkest stop, 6.2:1 lightest) and on the field. */
+  --panel-muted: #595049;
   --panel-line: rgba(57, 50, 43, 0.12);
-  --field: #f3ece1;
+  /* Flat brushed-silver field (replaces cream #f3ece1); a touch darker than the
+   * panel's light stops so inputs read as gently recessed. */
+  --field: #d7dadc;
   --field-line: rgba(57, 50, 43, 0.18);
   --on-dark: #f4ece0;
   --on-dark-muted: rgba(244, 236, 224, 0.7);
@@ -45,9 +51,10 @@
   --btn-shadow: 0 2px 10px rgba(160, 114, 66, 0.28);
   --panel-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
   --radius: 16px;
-  /* Deepened from #5a7a5a so the small "ready" status line clears WCAG AA on
-   * the cream field; still reads as the forest green for the timer-done state. */
-  --done: #4f6f4f;
+  /* Forest green for the timer-done / "ready" status line. Re-deepened from
+   * #4f6f4f to clear WCAG AA on the brushed-silver panel (4.7:1 over the
+   * gradient's darkest stop); still reads as forest green. */
+  --done: #3f5a3f;
   --done-soft: #e3ebe0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: var(--on-dark);
@@ -119,7 +126,7 @@
   color: var(--accent-solid);
 }
 
-/* ---- Cream panels (the working surfaces) ---- */
+/* ---- Brushed-silver panels (the working surfaces) ---- */
 .exam-root .card {
   background: var(--panel);
   border: 1px solid var(--panel-line);
