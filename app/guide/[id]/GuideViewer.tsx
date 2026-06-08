@@ -51,7 +51,7 @@ export function GuideViewer({ id, title, html }: Props) {
             border: "none",
             borderRadius: 16,
             boxShadow: "0 8px 30px rgba(0,0,0,0.22)",
-            background: "linear-gradient(160deg, #e2e4e6 0%, #c7cbce 55%, #d4d7d9 100%)",
+            background: "#14110d",
           }}
         />
       </div>
