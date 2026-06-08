@@ -16,7 +16,7 @@ Core principles
 Required features in every output
 - Timers: every working stage and every break has a countdown timer matching its duration. Pause/resume/reset controls. Soft sine-wave chime on completion (not a jarring alarm). Visual colour change — accent colour whilst running, green when done. Use the JavaScript pattern from the template. Do NOT add timers to optional stages — those need to feel genuinely optional.
 - Checkboxes: each stage has a sub-checklist. When all boxes in a stage are ticked, the stage visually fades and the progress counter at the bottom updates.
-- Stages collapse and expand: only stage 1 is open by default. Click the header to toggle. Smooth transition. An open stage must let its body grow freely (overflow visible when open) so a nested reveal, like the glossary details, expands in place without the stage having to be collapsed and reopened first.
+- Stages collapse and expand: only stage 1 is open by default. Click the header to toggle. Smooth transition. An open stage must let its body grow freely (overflow visible when open) so a nested reveal, like the glossary details, expands in place without the stage having to be collapsed and reopened first. Clicking inside that reveal must never toggle the stage: only the stage header toggles it, and the summary click is stopped from bubbling to the header (see the script).
 - Progress counter at the bottom: "X of Y stages complete." When all done, it changes to something like "All done. Close the laptop."
 - Big "Start here" block at the top: in the rose-gold gradient with white text, with the single first action of the entire guide. No decisions for the user to make at the start.
 
@@ -194,6 +194,10 @@ REFERENCE TEMPLATE (copy these patterns; adapt the content):
     }
   }
   document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateProgress));
+  // A collapsible aside (any details/summary, e.g. the glossary) must open in
+  // place without toggling the stage it sits in. Stop its click from bubbling up
+  // to the stage header's toggle handler.
+  document.querySelectorAll('summary').forEach(s => s.addEventListener('click', e => e.stopPropagation()));
   document.querySelector('[data-stage="1"]').classList.add('open');
 
   const timerStates = new WeakMap();
