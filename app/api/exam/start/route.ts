@@ -46,9 +46,11 @@ export async function POST(req: NextRequest) {
       ? Math.floor(body.total_minutes)
       : 0;
 
-  if (!examinerReportUrl || !paperUrl || !markSchemeUrl) {
+  // The examiner's report is optional: most subjects don't have one. Only the
+  // paper and mark scheme are required.
+  if (!paperUrl || !markSchemeUrl) {
     return NextResponse.json(
-      { error: "Missing uploaded files for examiner's report, paper, or mark scheme." },
+      { error: "Missing uploaded files for the paper or mark scheme." },
       { status: 400 },
     );
   }
@@ -59,7 +61,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const blobUrls = [examinerReportUrl, paperUrl, markSchemeUrl];
+  // Only blobs we actually received get cleaned up (the report may be absent).
+  const blobUrls = [examinerReportUrl, paperUrl, markSchemeUrl].filter(Boolean);
   // Always clean up the uploaded blobs before returning — on success or on any
   // error. The extracted text lives in the database; we never keep originals.
   async function cleanupBlobs() {
@@ -74,17 +77,16 @@ export async function POST(req: NextRequest) {
 
   // Server-side extraction. Fetch each blob and pull text out in Node, where
   // PDFs/images/Word docs read reliably (the client-side path failed silently
-  // on iPad Safari).
-  let examinerReportText: string;
+  // on iPad Safari). The paper and mark scheme are required; an unreadable one
+  // is a hard error. The examiner's report is optional, so a missing or
+  // unreadable report is treated as "no report" and never blocks the run.
   let paperText: string;
   let markSchemeText: string;
   try {
-    [examinerReportText, paperText, markSchemeText] = await Promise.all([
-      extractTextFromUrl(examinerReportUrl),
+    [paperText, markSchemeText] = await Promise.all([
       extractTextFromUrl(paperUrl),
       extractTextFromUrl(markSchemeUrl),
     ]);
-    examinerReportText = examinerReportText.trim();
     paperText = paperText.trim();
     markSchemeText = markSchemeText.trim();
   } catch {
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!examinerReportText || !paperText || !markSchemeText) {
+  if (!paperText || !markSchemeText) {
     await cleanupBlobs();
     return NextResponse.json(
       {
@@ -107,6 +109,19 @@ export async function POST(req: NextRequest) {
       },
       { status: 422 },
     );
+  }
+
+  // null means "no report for this subject". Stored as NULL, coerced to "" only
+  // where the prompts need a string. An unreadable report falls back to null
+  // rather than failing the whole paper.
+  let examinerReportText: string | null = null;
+  if (examinerReportUrl) {
+    try {
+      const extracted = (await extractTextFromUrl(examinerReportUrl)).trim();
+      examinerReportText = extracted.length > 0 ? extracted : null;
+    } catch {
+      examinerReportText = null;
+    }
   }
 
   const client = new Anthropic({ apiKey });
@@ -124,7 +139,7 @@ export async function POST(req: NextRequest) {
               type: "text",
               text: buildParsingUserMessage({
                 total_minutes: totalMinutes,
-                examiner_report_text: examinerReportText,
+                examiner_report_text: examinerReportText ?? "",
                 paper_text: paperText,
                 mark_scheme_text: markSchemeText,
               }),

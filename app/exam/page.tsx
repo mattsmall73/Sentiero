@@ -14,11 +14,12 @@ const SLOTS: Slot[] = ["examiner_report", "paper", "mark_scheme"];
 // Decision #3: the third artefact is the examiner's report, labelled honestly
 // with sub-text describing what that file actually is (Help! wrongly called it
 // "Subject specification").
-const SLOT_META: Record<Slot, { label: string; sub: string; noun: string }> = {
+const SLOT_META: Record<Slot, { label: string; sub: string; noun: string; optional?: boolean }> = {
   examiner_report: {
     label: "Examiner's report",
-    sub: "The examiner's written commentary on how students answered — what gained marks and where answers fell down. Used for coaching words only, never for any mark.",
+    sub: "The examiner's written commentary on how students answered: what gained marks and where answers fell down. Used for coaching words only, never for any mark. Many subjects don't have one, so leave this empty if yours doesn't.",
     noun: "examiner's report",
+    optional: true,
   },
   paper: {
     label: "Past paper",
@@ -69,9 +70,13 @@ export default function Page() {
     (parseInt(manualHours || "0", 10) || 0) * 60 + (parseInt(manualMinutes || "0", 10) || 0);
   const totalMinutes = preset !== null ? preset : manualTotal;
 
-  const allAttached = SLOTS.every((s) => slots[s].kind !== "empty");
+  // The examiner's report is optional, so it doesn't gate the Start button.
+  // Only the required slots (paper, mark scheme) must be attached.
+  const requiredAttached = SLOTS.every(
+    (s) => SLOT_META[s].optional || slots[s].kind !== "empty",
+  );
   const hasTime = totalMinutes > 0;
-  const canStart = allAttached && hasTime && !submitting;
+  const canStart = requiredAttached && hasTime && !submitting;
 
   function attachFile(slot: Slot, file: File) {
     setSlots((prev) => ({ ...prev, [slot]: { kind: "attached", file } }));
@@ -149,6 +154,10 @@ export default function Page() {
 
     const urls: Partial<Record<Slot, string>> = {};
     for (const slot of SLOTS) {
+      // An empty optional slot (the examiner's report) is fine: skip it rather
+      // than treating it as a failed upload. Required slots are guaranteed
+      // attached by canStart.
+      if (SLOT_META[slot].optional && slots[slot].kind === "empty") continue;
       const url = await uploadOne(slot);
       if (url === null) {
         setError("We couldn't upload the file. Try again, or check the file isn't corrupted.");
@@ -254,7 +263,7 @@ export default function Page() {
           <>
             <div className="card">
               <div className="step-label">Step one</div>
-              <h2>Three files</h2>
+              <h2>Your files</h2>
 
               {SLOTS.map((slot) => {
                 const s = slots[slot];
@@ -280,7 +289,15 @@ export default function Page() {
                       if (file) attachFile(slot, file);
                     }}
                   >
-                    <div className="upload-slot-label">{SLOT_META[slot].label}</div>
+                    <div className="upload-slot-label">
+                      {SLOT_META[slot].label}
+                      {SLOT_META[slot].optional && (
+                        <span style={{ color: "var(--panel-muted)", fontWeight: 400 }}>
+                          {" "}
+                          (if available)
+                        </span>
+                      )}
+                    </div>
                     <div className="upload-slot-sub">{SLOT_META[slot].sub}</div>
                     <div className="upload-slot-state" style={{ color: stateColor }}>
                       {line.text}

@@ -60,7 +60,9 @@ export type PaperRow = {
   id: string;
   created_at: string;
   title: string | null;
-  examiner_report_text: string;
+  // null when the subject has no examiner's report (a structural absence, not a
+  // gap). The marking flow coerces null to "" when building the prompt.
+  examiner_report_text: string | null;
   paper_text: string;
   mark_scheme_text: string;
   parsed_structure: ParsedPaper;
@@ -83,7 +85,7 @@ export type PracticeSessionRow = {
 
 export async function createPaper(input: {
   title: string | null;
-  examiner_report_text: string;
+  examiner_report_text: string | null;
   paper_text: string;
   mark_scheme_text: string;
   parsed_structure: ParsedPaper;

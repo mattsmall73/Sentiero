@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
               type: "text",
               text: buildMarkingUserMessage({
                 paper_title: row.paper.title ?? row.paper.parsed_structure.paper_title ?? "Paper",
-                examiner_report_text: row.paper.examiner_report_text,
+                examiner_report_text: row.paper.examiner_report_text ?? "",
                 paper_text: row.paper.paper_text,
                 mark_scheme_text: row.paper.mark_scheme_text,
                 parsed_structure: JSON.stringify(row.paper.parsed_structure, null, 2),
