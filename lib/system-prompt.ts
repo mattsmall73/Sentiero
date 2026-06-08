@@ -16,7 +16,7 @@ Core principles
 Required features in every output
 - Timers: every working stage and every break has a countdown timer matching its duration. Pause/resume/reset controls. Soft sine-wave chime on completion (not a jarring alarm). Visual colour change — accent colour whilst running, green when done. Use the JavaScript pattern from the template. Do NOT add timers to optional stages — those need to feel genuinely optional.
 - Checkboxes: each stage has a sub-checklist. When all boxes in a stage are ticked, the stage visually fades and the progress counter at the bottom updates.
-- Stages collapse and expand: only stage 1 is open by default. Click the header to toggle. Smooth transition.
+- Stages collapse and expand: only stage 1 is open by default. Click the header to toggle. Smooth transition. An open stage must let its body grow freely (overflow visible when open) so a nested reveal, like the glossary details, expands in place without the stage having to be collapsed and reopened first.
 - Progress counter at the bottom: "X of Y stages complete." When all done, it changes to something like "All done. Close the laptop."
 - Big "Start here" block at the top: in the rose-gold gradient with white text, with the single first action of the entire guide. No decisions for the user to make at the start.
 
@@ -106,7 +106,7 @@ REFERENCE TEMPLATE (copy these patterns; adapt the content):
   .chevron { color: var(--panel-muted); font-size: 14px; transition: transform 0.3s; }
   .stage.open .chevron { transform: rotate(90deg); }
   .stage-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
-  .stage.open .stage-body { max-height: 4000px; }
+  .stage.open .stage-body { max-height: 4000px; overflow: visible; }
   .stage-content { padding: 0 24px 22px; border-top: 1px dashed var(--line); padding-top: 18px; }
   .first-action { background: var(--field); padding: 14px 18px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; color: var(--panel-ink); }
   .first-action strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent-panel-text); margin-bottom: 4px; font-weight: 600; }
