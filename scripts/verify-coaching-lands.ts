@@ -196,6 +196,20 @@ function selfTestLandsCheck(): boolean {
       expectDangle: false,
     },
     {
+      // A skill-area near-miss: it names the territory ("how the words play for
+      // an audience") rather than the pen-level mechanic (which moment, which
+      // pause, who is on stage). The heuristic flags this one, but only
+      // incidentally: the literal "on the page" is a vibe token and the forward
+      // move offers no action cue, so it trips. Reword it without a vibe token
+      // ("...and showing how those words play for an audience") and the
+      // heuristic would clear it - it does not actually detect the skill-area
+      // gap. So this assertion documents a limit, not a real win: the human
+      // read of the rendered page is the gate for near-misses like this.
+      label: "skill-area near-miss (flagged here, but only incidentally - see note)",
+      text: "The missing two marks are the difference between reading the words on the page closely, which you do, and showing how those words play in front of an audience, which the top band rewards.",
+      expectDangle: true,
+    },
+    {
       label: "plain dangler (vibe, no action)",
       text: "Make the writing sing and come alive on the page.",
       expectDangle: true,
