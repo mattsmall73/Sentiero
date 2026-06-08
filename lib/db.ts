@@ -32,18 +32,24 @@ export async function ensureSchema(): Promise<void> {
 
   // Exam Practice tables. Same structure as Help!'s, with the third artefact
   // named honestly: examiner_report_text (Help! still calls this spec_text).
+  // The examiner's report is nullable: English papers have one, but many
+  // subjects (sociology, politics, maths) do not. A NULL here means "no report
+  // exists for this subject", not "the student forgot one".
   await sql`
     CREATE TABLE IF NOT EXISTS papers (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       created_at timestamptz NOT NULL DEFAULT now(),
       title text,
-      examiner_report_text text NOT NULL,
+      examiner_report_text text,
       paper_text text NOT NULL,
       mark_scheme_text text NOT NULL,
       parsed_structure jsonb NOT NULL,
       total_marks integer
     )
   `;
+  // Self-migrate existing deployments where the column was created NOT NULL
+  // (before the report became optional). Idempotent: a no-op once nullable.
+  await sql`ALTER TABLE papers ALTER COLUMN examiner_report_text DROP NOT NULL`;
   await sql`
     CREATE TABLE IF NOT EXISTS practice_sessions (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

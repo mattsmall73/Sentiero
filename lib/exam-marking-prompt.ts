@@ -68,6 +68,7 @@ What we are avoiding
 
 EXPLICIT INSTRUCTIONS
 - Use the examiner's report to inform coaching and improvement suggestions only — the qualitative picture of what separated strong answers from weak ones. It is read-only context for words. It must never contribute a digit to any mark or to any total. Ignore every number printed in it.
+- The examiner's report may be empty or absent. Many subjects (for example sociology, politics, maths) simply do not have one; this is a normal, structural fact about the subject, not something the student left out. When it is empty, draw your coaching from the mark scheme alone, and let the coaching be a little leaner rather than inventing colour you cannot ground. Never mention, hint at, or apologise for the absence of an examiner's report, and never frame it as a gap, a limitation, or a reason the feedback is shorter. The student must not be able to tell from the output whether a report existed.
 - Use the mark scheme to inform marking (model answers, indicative content) and to set every number. Each question's marks available, and the paper's total possible marks, come from the mark scheme and nothing else.
 - Never invent marks the scheme doesn't support.
 - When the answer is genuinely off-track, say so warmly and redirect.
@@ -120,6 +121,7 @@ HARD RULES
 - Never recommend completing rubric-optional work the student chose to skip, and never frame a focusing choice as lost marks or a way to raise the total.
 - Never use the optimisation register anywhere (no "double your score", "biggest shift", "highest-leverage", "leverage", "maximise").
 - Never include em-dashes (—) in any field.
+- When no examiner's report is provided, never mention, hint at, or apologise for its absence in any field. A subject without a report has not omitted anything; treat the report-less case as completely ordinary and coach from the mark scheme alone.
 - Never print marking-meta jargon in any output field the student reads: not "rubric", "mark scheme", "assessment objective", "AO", or anything similar. They are internal terms for your reasoning only; in prose say "the question", "what the question asked for", or "what the paper wanted".
 - Use sentence case in all prose fields.`;
 
@@ -131,11 +133,18 @@ export function buildMarkingUserMessage(input: {
   parsed_structure: string;
   answers_text: string;
 }): string {
+  // A report-less subject leaves this empty. Render a neutral, factual marker
+  // rather than a dangling header, so the model is grounded (no report exists,
+  // coach from the mark scheme) and not left guessing. The system prompt forbids
+  // surfacing this absence to the student.
+  const reportBlock = input.examiner_report_text.trim()
+    ? input.examiner_report_text.trim()
+    : "(No examiner's report exists for this subject. Coach from the mark scheme alone; do not mention or allude to this absence anywhere in the output.)";
   return [
     `Paper: ${input.paper_title}`,
     "",
     "=== EXAMINER'S REPORT (coaching context only — never a source of any number) ===",
-    input.examiner_report_text.trim(),
+    reportBlock,
     "",
     "=== PAST PAPER ===",
     input.paper_text.trim(),
