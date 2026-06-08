@@ -13,11 +13,15 @@
 //   2. Absence guard: when a report is absent, the output must never mention,
 //      hint at, or apologise for its absence - and must never name the artefact
 //      "examiner's report" in either case (it is internal meta).
+//   3. Directness guard: no next step is a figurative non-instruction
+//      ("widen the lens", "go deeper", "develop your analysis"). A neurodiverse
+//      student cannot act on a metaphor; a next step must name the move.
 //
 // The number contract (the mark scheme owns every number) is checked in both
 // cases. Keyword signals are directional, not proof - a human read of the two
-// printed outputs side by side is still the real gate, especially for tone and
-// for how richly the present-case coaching uses the report.
+// printed outputs side by side is still the real gate, especially for tone, for
+// how richly the present-case coaching uses the report, and for whether each
+// next step is concrete enough for a neurodiverse student to act on.
 //
 // Run:  ANTHROPIC_API_KEY=sk-... npx tsx scripts/verify-optional-report.ts
 // Without a key it exits 0 with a SKIP notice.
@@ -131,6 +135,39 @@ const REPORT_STAGECRAFT_SIGNALS: RegExp[] = [
   /name\s+a\s+study/i,
   /\bstudy\b/i,
 ];
+
+// Figurative, destination-not-move next steps the prompt now bans. A
+// neurodiverse student cannot act on a metaphor, so these fail wherever they
+// appear in a next-step field. ("develop it for two sentences" is fine; only
+// "develop your analysis" and friends are abstract non-instructions.)
+const FIGURATIVE_NEXT_STEP_PATTERNS: RegExp[] = [
+  /widen(ing)?\s+the\s+lens/i,
+  /\b(go|dig)\s+deeper\b/i,
+  /develop\s+your\s+analysis/i,
+  /engage\s+(more|further|with\s+the\s+whole)/i,
+  /\bexplore\s+(more|further)\b/i,
+];
+
+function nextStepStrings(m: MarkingResults): { where: string; text: string }[] {
+  const out = [{ where: "headline_next_step", text: m.headline_next_step ?? "" }];
+  for (const q of m.questions ?? []) {
+    out.push({ where: `Q${q.number}.next_step`, text: q.next_step ?? "" });
+  }
+  return out;
+}
+
+function checkNextStepsLiteral(m: MarkingResults): string[] {
+  const problems: string[] = [];
+  for (const { where, text } of nextStepStrings(m)) {
+    for (const re of FIGURATIVE_NEXT_STEP_PATTERNS) {
+      if (re.test(text)) {
+        problems.push(`${where} is a figurative non-instruction (/${re.source}/): "${text.trim()}"`);
+        break;
+      }
+    }
+  }
+  return problems;
+}
 
 function studentFacingStrings(m: MarkingResults): { where: string; text: string }[] {
   const out: { where: string; text: string }[] = [
@@ -263,10 +300,11 @@ async function main() {
 
   const problems: string[] = [];
 
-  // Both cases: number contract holds, and the artefact is never named.
+  // Both cases: numbers hold, the artefact is never named, next steps are literal.
   for (const [label, m] of [["PRESENT", present], ["ABSENT", absent]] as const) {
     for (const p of checkNumberContract(m)) problems.push(`[${label}] ${p}`);
     for (const p of checkNoAbsenceMention(m)) problems.push(`[${label}] ${p}`);
+    for (const p of checkNextStepsLiteral(m)) problems.push(`[${label}] ${p}`);
   }
 
   // Regression guard: the present-case report must actually colour the coaching.
@@ -285,8 +323,10 @@ async function main() {
     for (const p of problems) console.error(`  - ${p}`);
     process.exit(1);
   }
-  console.log("\nPASS - numbers hold in both cases, the report is used when present, and its");
-  console.log("absence is never surfaced when it is missing. Still read both outputs for tone.");
+  console.log("\nPASS - numbers hold both ways, the report is used when present and never named");
+  console.log("when absent, and no next step is a figurative non-instruction.");
+  console.log("Still read both outputs: only a human catches a next step that is technically");
+  console.log("literal but still too vague for a neurodiverse student to act on.");
 }
 
 main().catch((err) => {
