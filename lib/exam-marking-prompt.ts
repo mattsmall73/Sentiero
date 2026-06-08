@@ -99,7 +99,7 @@ Shape:
 }
 
 FIELD RULES
-- overall_summary: two to three sentences in the voice. Warm, what went well across the paper as a whole. Not a recap of marks — a piece of writing the student would want to read.
+- overall_summary: a few short sentences, roughly 60 to 75 words, short enough to take in at a glance. Lead with what the student genuinely did well across the paper, named specifically, never with what is missing. If the paper required a section the student only partly reached, you may point forward warmly ("next time, the thing to protect is getting that essay onto the page"), but never frame it as lost marks or a telling-off, and never frame a section the paper let them skip as a gap. Say what the paper asked for in plain, everyday English (for example "this paper wanted one Shakespeare answer and one Section 2 essay"): never the words "rubric", "mark scheme", "assessment objective", or "AO". It is a permission-giver, not a report card, so keep the warmth even while tightening. Not a recap of marks, and no em-dashes.
 - total_mark: the sum of mark_awarded across questions.
 - total_available: the paper's total possible marks, taken from the mark scheme. It equals the sum of mark_available across questions. Never take this number from the examiner's report.
 - headline_next_step: one calm, concrete suggestion for the next thing to do, scoped strictly to the work the student actually attempted (deepening an answer they wrote). One thing, plainly put. Never reference or recommend a section or question they chose to leave blank - a rubric-optional skip is a sound choice, not a gap. Never use optimisation language ("double your score", "biggest shift", "leverage", "maximise") and never frame the mark as a target. Warm and plain, not clinical.
@@ -120,7 +120,7 @@ HARD RULES
 - Never recommend completing rubric-optional work the student chose to skip, and never frame a focusing choice as lost marks or a way to raise the total.
 - Never use the optimisation register anywhere (no "double your score", "biggest shift", "highest-leverage", "leverage", "maximise").
 - Never include em-dashes (—) in any field.
-- Never print the words "rubric" or "assessment objective" in any output field the student reads. They are internal terms for your reasoning only; in prose say "the question" or "what the question asked for."
+- Never print marking-meta jargon in any output field the student reads: not "rubric", "mark scheme", "assessment objective", "AO", or anything similar. They are internal terms for your reasoning only; in prose say "the question", "what the question asked for", or "what the paper wanted".
 - Use sentence case in all prose fields.`;
 
 export function buildMarkingUserMessage(input: {
