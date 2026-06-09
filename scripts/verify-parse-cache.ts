@@ -22,7 +22,7 @@
 // Run:  npx tsx scripts/verify-parse-cache.ts
 //       POSTGRES_URL=... npx tsx scripts/verify-parse-cache.ts   (adds layer B)
 
-import { computeCacheKey, parseVersion } from "../lib/exam-cache";
+import { computeCacheKey, computeReportCacheKey, parseVersion } from "../lib/exam-cache";
 
 // Stand-ins for uploaded file bytes (the real ones are PDF/docx binaries).
 const bytes = (s: string) => new Uint8Array(Buffer.from(s, "utf8"));
@@ -88,6 +88,15 @@ function pureGuards() {
   check("parse version embeds the model", v.startsWith(`${PARSE_MODEL}:`));
   check("a different parse model yields a different version", v !== parseVersion("claude-sonnet-4-6"));
   check("the version is stable for the same model + prompt", v === parseVersion(PARSE_MODEL));
+
+  // Report transcription cache (keyed on the report file's bytes, version-stamped
+  // by the transcription model + prompt). Separate from the parse key.
+  const reportA = bytes("Examiners' report A :: %PDF bytes");
+  const reportB = bytes("Examiners' report B :: different %PDF bytes");
+  const rKeyA = computeReportCacheKey(reportA);
+  check("identical report bytes produce the same report key", rKeyA === computeReportCacheKey(reportA));
+  check("a different report file gets a different report key", rKeyA !== computeReportCacheKey(reportB));
+  check("the report key is version-stamped (embeds the transcription model)", rKeyA.includes("claude-haiku"));
 }
 
 async function dbEndToEnd() {
@@ -99,8 +108,12 @@ async function dbEndToEnd() {
   }
   console.log("\n== B. DB end-to-end (live database) ==");
 
-  const { createPaper, findCachedParse, createSession } = await import("../lib/exam-db");
+  const { createPaper, findCachedParse, findCachedReportText, createSession } = await import(
+    "../lib/exam-db"
+  );
   const version = parseVersion(PARSE_MODEL);
+  const REPORT_A_TEXT = "Examiners' report: strong answers named specific terms.";
+  const reportKeyA = computeReportCacheKey(bytes("Examiners' report A :: %PDF bytes"));
 
   // A deterministic structure + text standing in for an extract + Opus parse.
   const parsedA = {
@@ -126,16 +139,21 @@ async function dbEndToEnd() {
   const missBefore = await findCachedParse(keyA, version);
   check("brand-new paper is a cache miss before it is stored", missBefore === null);
 
+  // Report transcription cache miss before anything is stored.
+  const reportMissBefore = await findCachedReportText(reportKeyA);
+  check("brand-new report is a transcription-cache miss before it is stored", reportMissBefore === null);
+
   // Seed it (the miss path: extract, parse, persist).
   const seedId = await createPaper({
     title: parsedA.paper_title,
-    examiner_report_text: "Examiners' report for the first upload.",
+    examiner_report_text: REPORT_A_TEXT,
     paper_text: PAPER_A_TEXT,
     mark_scheme_text: MARK_SCHEME_A_TEXT,
     parsed_structure: parsedA,
     total_marks: 16,
     cache_key: keyA,
     parse_version: version,
+    report_cache_key: reportKeyA,
   });
   check("seed paper stored", typeof seedId === "string" && seedId.length > 0);
 
@@ -150,6 +168,15 @@ async function dbEndToEnd() {
       hit?.paper_text === PAPER_A_TEXT &&
       hit?.mark_scheme_text === MARK_SCHEME_A_TEXT,
   );
+
+  // Report transcription cache hit: the same report bytes now return the stored
+  // text, so the Haiku transcription is skipped.
+  const reportHit = await findCachedReportText(reportKeyA);
+  check("same report bytes are now a transcription-cache hit", reportHit === REPORT_A_TEXT);
+
+  // A different report file misses and would transcribe fresh.
+  const reportFalseHit = await findCachedReportText(computeReportCacheKey(bytes("a totally different report")));
+  check("a different report file is a transcription-cache miss", reportFalseHit === null);
 
   // False-hit guard: a different paper misses and would parse fresh.
   const falseHit = await findCachedParse(keyB, version);

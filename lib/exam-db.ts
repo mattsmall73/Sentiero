@@ -94,10 +94,13 @@ export async function createPaper(input: {
   // first upload of a paper seeds the cache and later uploads can find it.
   cache_key: string;
   parse_version: string;
+  // Report transcription cache: the report file's byte hash (version-stamped).
+  // NULL when no report was uploaded. Seeds findCachedReportText for reuse.
+  report_cache_key: string | null;
 }): Promise<string> {
   await ensureSchema();
   const { rows } = await sql<{ id: string }>`
-    INSERT INTO papers (title, examiner_report_text, paper_text, mark_scheme_text, parsed_structure, total_marks, cache_key, parse_version)
+    INSERT INTO papers (title, examiner_report_text, paper_text, mark_scheme_text, parsed_structure, total_marks, cache_key, parse_version, report_cache_key)
     VALUES (
       ${input.title},
       ${input.examiner_report_text},
@@ -106,11 +109,28 @@ export async function createPaper(input: {
       ${JSON.stringify(input.parsed_structure)}::jsonb,
       ${input.total_marks},
       ${input.cache_key},
-      ${input.parse_version}
+      ${input.parse_version},
+      ${input.report_cache_key}
     )
     RETURNING id
   `;
   return rows[0].id;
+}
+
+// Look up a previously transcribed examiner's report by its byte-hash cache key.
+// A hit returns the stored text so the caller can skip the Haiku transcription
+// of a byte-identical report file. Only rows that actually stored report text
+// qualify (a NULL report never serves a hit). Oldest match wins for stability.
+export async function findCachedReportText(report_cache_key: string): Promise<string | null> {
+  await ensureSchema();
+  const { rows } = await sql<{ examiner_report_text: string | null }>`
+    SELECT examiner_report_text
+    FROM papers
+    WHERE report_cache_key = ${report_cache_key} AND examiner_report_text IS NOT NULL
+    ORDER BY created_at ASC
+    LIMIT 1
+  `;
+  return rows[0]?.examiner_report_text ?? null;
 }
 
 // Look up a previously parsed paper by its cache identity. A hit returns the

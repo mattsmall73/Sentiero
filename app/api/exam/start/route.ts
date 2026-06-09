@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { PARSING_SYSTEM_PROMPT, buildParsingUserMessage } from "@/lib/exam-parsing-prompt";
-import { extractTextFromUrl, extractTextOnly, fetchFileFromUrl } from "@/lib/exam-extract";
-import { createPaper, createSession, findCachedParse, ParsedPaper } from "@/lib/exam-db";
-import { computeCacheKey, parseVersion } from "@/lib/exam-cache";
+import { extractTextOnly, fetchFileFromUrl } from "@/lib/exam-extract";
+import {
+  createPaper,
+  createSession,
+  findCachedParse,
+  findCachedReportText,
+  ParsedPaper,
+} from "@/lib/exam-db";
+import { computeCacheKey, computeReportCacheKey, parseVersion } from "@/lib/exam-cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -137,15 +143,33 @@ export async function POST(req: NextRequest) {
       `key=${cacheKey.slice(0, 12)} version=${cacheVersion} report=${examinerReportUrl ? "yes" : "no"}`,
   );
 
-  // The examiner's report is optional and never cached: extract it fresh on every
-  // upload so marking always uses the report that came with THIS sit. null means
-  // "no report for this subject" (stored as NULL, coerced to "" where prompts
-  // need a string). An unreadable report falls back to null rather than failing.
+  // The examiner's report is optional. It is never part of the parse key and
+  // always belongs to THIS upload (marking reads it fresh), but its TRANSCRIPTION
+  // is cached on the report file's bytes: re-transcribing a byte-identical report
+  // every upload is the slow Haiku step we can skip. null means "no report"
+  // (stored as NULL). An unreadable report falls back to null rather than failing.
   let examinerReportText: string | null = null;
+  let reportCacheKey: string | null = null;
   if (examinerReportUrl) {
     try {
-      const extracted = (await extractTextFromUrl(examinerReportUrl)).trim();
-      examinerReportText = extracted.length > 0 ? extracted : null;
+      const reportFile = await fetchFileFromUrl(examinerReportUrl);
+      reportCacheKey = computeReportCacheKey(new Uint8Array(await reportFile.arrayBuffer()));
+
+      let cachedReport: string | null = null;
+      try {
+        cachedReport = await findCachedReportText(reportCacheKey);
+      } catch (err) {
+        console.error("[report-cache] lookup failed; will transcribe:", err);
+      }
+
+      if (cachedReport && cachedReport.trim().length > 0) {
+        examinerReportText = cachedReport;
+        console.log(`[report-cache] HIT (skipping transcription) key=${reportCacheKey.slice(-12)}`);
+      } else {
+        const extracted = (await extractTextOnly(reportFile)).trim();
+        examinerReportText = extracted.length > 0 ? extracted : null;
+        console.log(`[report-cache] MISS (transcribing) key=${reportCacheKey.slice(-12)}`);
+      }
     } catch {
       examinerReportText = null;
     }
@@ -249,6 +273,7 @@ export async function POST(req: NextRequest) {
       total_marks: totalMarks,
       cache_key: cacheKey,
       parse_version: cacheVersion,
+      report_cache_key: reportCacheKey,
     });
     sessionId = await createSession({
       paper_id: paperId,

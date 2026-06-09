@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { PARSING_SYSTEM_PROMPT } from "./exam-parsing-prompt";
+import { TRANSCRIBE_MODEL, TRANSCRIBE_SYSTEM_PROMPT } from "./exam-extract-prompt";
 
 // Parse-cache identity. Past papers don't change, so an identical paper + mark
 // scheme should reuse a stored parse instead of paying for the Opus parse again.
@@ -47,4 +48,17 @@ export function computeCacheKey(paperBytes: Uint8Array, markSchemeBytes: Uint8Ar
 // A different version is treated as a cache miss.
 export function parseVersion(model: string): string {
   return `${model}:${sha256(PARSING_SYSTEM_PROMPT).slice(0, 16)}`;
+}
+
+// Cache key for a report's TRANSCRIPTION (not its parse - the report has no
+// parse). The examiner's report is excluded from the parse key on purpose, but
+// re-transcribing a byte-identical report file on every upload is pure waste:
+// Haiku transcription of a multi-page PDF is slow. So cache the transcribed text
+// keyed on the report file's bytes, stamped with the transcription model +
+// prompt (a change invalidates stale text). This never affects the parse or the
+// marking contract - marking still reads the report text fresh from its column;
+// we only avoid re-transcribing the same file.
+export function computeReportCacheKey(reportBytes: Uint8Array): string {
+  const version = `${TRANSCRIBE_MODEL}:${sha256(TRANSCRIBE_SYSTEM_PROMPT).slice(0, 16)}`;
+  return `${version}|${sha256Hex(reportBytes)}`;
 }

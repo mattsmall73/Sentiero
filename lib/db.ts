@@ -51,7 +51,12 @@ export async function ensureSchema(): Promise<void> {
       -- skips the Opus parse. Nullable so rows that predate the cache simply
       -- never match and re-parse.
       cache_key text,
-      parse_version text
+      parse_version text,
+      -- Report transcription cache (see lib/exam-cache.ts). report_cache_key is
+      -- the report file's byte hash, version-stamped by the transcription model
+      -- + prompt. A hit reuses the stored examiner_report_text instead of
+      -- re-running the Haiku transcription. NULL when no report was uploaded.
+      report_cache_key text
     )
   `;
   // Self-migrate existing deployments where the column was created NOT NULL
@@ -60,7 +65,9 @@ export async function ensureSchema(): Promise<void> {
   // Self-migrate deployments created before the parse cache existed. Idempotent.
   await sql`ALTER TABLE papers ADD COLUMN IF NOT EXISTS cache_key text`;
   await sql`ALTER TABLE papers ADD COLUMN IF NOT EXISTS parse_version text`;
+  await sql`ALTER TABLE papers ADD COLUMN IF NOT EXISTS report_cache_key text`;
   await sql`CREATE INDEX IF NOT EXISTS papers_cache_lookup_idx ON papers (cache_key, parse_version)`;
+  await sql`CREATE INDEX IF NOT EXISTS papers_report_cache_idx ON papers (report_cache_key)`;
   await sql`
     CREATE TABLE IF NOT EXISTS practice_sessions (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

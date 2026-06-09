@@ -1,12 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
+import { TRANSCRIBE_MODEL, TRANSCRIBE_SYSTEM_PROMPT } from "./exam-extract-prompt";
 
 // Server-side extraction for Exam Practice. PDFs and images are transcribed by
 // Haiku; .docx via mammoth; .txt read directly. There is NO client-side
 // extraction and no in-browser pdfjs-dist anywhere — this is the iPad-safe
 // pattern, and the whole point of doing it server-side.
-
-const TRANSCRIBE_MODEL = "claude-haiku-4-5-20251001";
 
 type ContentBlock = Exclude<
   Anthropic.MessageCreateParams["messages"][number]["content"],
@@ -142,8 +141,7 @@ export async function extractTextOnly(file: File, pastedText?: string): Promise<
   const response = await client.messages.create({
     model: TRANSCRIBE_MODEL,
     max_tokens: 8000,
-    system:
-      "You are a faithful transcriber. Extract the full text from the attached file as plain text, preserving question numbering, marks (e.g. '[4 marks]'), and section headings exactly as printed. Do not summarise. Do not add commentary. Output the transcribed text only.",
+    system: TRANSCRIBE_SYSTEM_PROMPT,
     messages: [
       {
         role: "user",
