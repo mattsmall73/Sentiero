@@ -179,6 +179,9 @@ export default function AnswerClient(props: Props) {
       if (json.status === "mismatch") {
         setMismatch(json.message || "This looks like an answer to a different question. Please check the paper and try again.");
         setSubmitting(false);
+        // The notice sits at the top; submit is usually pressed from the foot of
+        // a long paper, so bring it into view rather than leave it off-screen.
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
       // Land on the freshly marked results with no transient "Not marked yet"
@@ -240,6 +243,9 @@ export default function AnswerClient(props: Props) {
           <div className="exam-save-state">{renderSaveState(saveState)}</div>
         </div>
 
+        {mismatch && <div className="exam-notice">{mismatch}</div>}
+
+
         {props.userName && (
           <div
             style={{
@@ -294,8 +300,6 @@ export default function AnswerClient(props: Props) {
             Submit for marking
           </button>
         </div>
-
-        {mismatch && <div className="exam-notice">{mismatch}</div>}
 
         {error && <div className="error">{error}</div>}
 
