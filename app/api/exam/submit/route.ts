@@ -104,6 +104,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Marking failed: ${message}` }, { status: 502 });
   }
 
+  // Second gate: the marking pass itself flags an answer that belongs to a
+  // different question or text. The pre-check above catches most mismatches
+  // before marking, but it can miss subtler same-author cases (e.g. a Hamlet
+  // answer against a Coriolanus question); the marking model reads everything in
+  // depth and reliably notices, so we honour its flag here and decline rather
+  // than store a confident mark and coaching the student never earned.
+  if (marking?.answer_mismatch?.detected === true) {
+    console.log(
+      `[mismatch-decline] session=${body.session_id} (marking-pass) ${(marking.answer_mismatch.note ?? "").slice(0, 200)}`,
+    );
+    return NextResponse.json({ status: "mismatch", message: MISMATCH_MESSAGE });
+  }
+
   if (
     !marking ||
     !Array.isArray(marking.questions) ||

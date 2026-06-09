@@ -49,6 +49,11 @@ export type MarkedQuestion = {
 };
 
 export type MarkingResults = {
+  // The marking pass also reports whether the answer looks like it belongs to a
+  // different question or text. When detected, the submit route declines (no
+  // mark, no coaching) rather than storing this result. Optional so sessions
+  // marked before the field existed still type-check.
+  answer_mismatch?: { detected: boolean; note: string };
   overall_summary: string;
   total_mark: number;
   total_available: number;
