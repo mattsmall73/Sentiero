@@ -365,6 +365,19 @@
   font-size: 14px;
 }
 
+/* A mismatch nudge is not an error: the student made an honest mix-up, not a
+ * mistake to flag in red. Warm gold wash, calm and quiet. */
+.exam-root .exam-notice {
+  background: rgba(160, 114, 66, 0.14);
+  border: 1px solid rgba(227, 182, 133, 0.4);
+  color: var(--on-dark);
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
 /* ---- Answering screen ---- */
 .exam-root .exam-header {
   position: sticky;

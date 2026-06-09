@@ -36,8 +36,20 @@ export default function AnswerClient(props: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [submitIdx, setSubmitIdx] = useState(0);
   const [error, setError] = useState("");
+  // Set when the marker declines because the answer looks like it belongs to a
+  // different question or paper. Shown inline; the answers stay editable so the
+  // student can re-check the upload and resubmit.
+  const [mismatch, setMismatch] = useState("");
 
   const totalSeconds = props.totalMinutes * 60;
+
+  // A freshly parsed, not-yet-cached paper is occasionally handed to this view
+  // before its parsed structure has fully populated (a rare load race that only
+  // shows on the slow cache-miss path; a cache hit is instant and never races).
+  // Rendering the questions then throws on props.parsed.sections. Treat a paper
+  // without usable sections as not-ready and wait, rather than assuming it.
+  const paperReady =
+    Array.isArray(props.parsed?.sections) && props.parsed.sections.length > 0;
 
   const answersRef = useRef(answers);
   const timerRef = useRef(timer);
@@ -69,6 +81,8 @@ export default function AnswerClient(props: Props) {
   );
 
   function onAnswerChange(questionNumber: string, value: string) {
+    // Editing clears a prior mismatch nudge - the student is acting on it.
+    if (mismatch) setMismatch("");
     setAnswers((prev) => {
       const next = { ...prev, [questionNumber]: value };
       return next;
@@ -122,6 +136,16 @@ export default function AnswerClient(props: Props) {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [props.sessionId]);
 
+  useEffect(() => {
+    if (paperReady) return;
+    // The paper arrived without its sections (the load race above). Reload once,
+    // shortly, to re-run the force-dynamic server read - a full document load
+    // bypasses the Router Cache and returns the now-populated paper, the same
+    // reason the results route reloads rather than soft-navigates.
+    const t = setTimeout(() => window.location.reload(), 1200);
+    return () => clearTimeout(t);
+  }, [paperReady]);
+
   function toggleTimer() {
     setTimer((prev) => {
       const next = { ...prev, paused: !prev.paused };
@@ -148,6 +172,7 @@ export default function AnswerClient(props: Props) {
     setShowConfirm(false);
     setSubmitting(true);
     setError("");
+    setMismatch("");
     setSubmitIdx(0);
     const tick = setInterval(() => {
       setSubmitIdx((i) => Math.min(i + 1, SUBMIT_MESSAGES.length - 1));
@@ -164,6 +189,17 @@ export default function AnswerClient(props: Props) {
       if (!res.ok) {
         setError(json.error || "Marking failed.");
         setSubmitting(false);
+        return;
+      }
+      // The marker declined: the answer looks like it belongs to a different
+      // question or paper. No mark, no coaching - show the blame-free nudge and
+      // drop back to the form with the answers intact so the upload can be fixed.
+      if (json.status === "mismatch") {
+        setMismatch(json.message || "This looks like an answer to a different question. Please check the paper and try again.");
+        setSubmitting(false);
+        // The notice sits at the top; submit is usually pressed from the foot of
+        // a long paper, so bring it into view rather than leave it off-screen.
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
       // Land on the freshly marked results with no transient "Not marked yet"
@@ -184,6 +220,31 @@ export default function AnswerClient(props: Props) {
   }
 
   const remaining = Math.max(0, totalSeconds - timer.elapsed_seconds);
+
+  if (!paperReady) {
+    // VOICE PASS (draft, not final): calm wording for the rare not-ready wait.
+    // No em-dashes; flagged for the family like the other loading copy.
+    return (
+      <div className="exam-root">
+        <div className="app">
+          <div className="brand">
+            <div className="brand-mark">Sentiero · Exam Practice</div>
+            <h1>Getting your paper ready</h1>
+            <div className="tagline">Almost there. This page will refresh on its own.</div>
+          </div>
+          <div className="card">
+            <div className="loading">
+              <div className="loading-dots">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (submitting) {
     return (
@@ -224,6 +285,9 @@ export default function AnswerClient(props: Props) {
           </button>
           <div className="exam-save-state">{renderSaveState(saveState)}</div>
         </div>
+
+        {mismatch && <div className="exam-notice">{mismatch}</div>}
+
 
         {props.userName && (
           <div

@@ -167,7 +167,7 @@ export default function Page() {
       urls[slot] = url;
     }
 
-    setSubmitMessage("Reading your paper...");
+    setSubmitMessage("Preparing your paper...");
 
     try {
       const res = await fetch("/api/exam/start", {

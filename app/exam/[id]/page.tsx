@@ -44,7 +44,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   return (
     <AnswerClient
       sessionId={row.session.id}
-      paperTitle={row.paper.title ?? row.paper.parsed_structure.paper_title ?? "Paper"}
+      paperTitle={row.paper.title ?? row.paper.parsed_structure?.paper_title ?? "Paper"}
       parsed={row.paper.parsed_structure}
       initialAnswers={row.session.answers ?? {}}
       initialTimer={row.session.timer_state ?? { elapsed_seconds: 0, paused: true }}
