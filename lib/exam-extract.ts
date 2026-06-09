@@ -96,11 +96,10 @@ export async function extractFile(file: File): Promise<ExtractionResult> {
   };
 }
 
-// Fetches a file from a (Vercel Blob) URL and extracts its text server-side,
-// reusing the same path as /api/exam/transcribe. The blob's stored
-// content-type plus the filename extension drive type detection in
-// extractFile, so a generic content-type still resolves via the extension.
-export async function extractTextFromUrl(url: string): Promise<string> {
+// Fetches a file from a (Vercel Blob) URL into an in-memory File, without
+// extracting. Split out so callers that need the raw bytes (e.g. the parse cache
+// hashing the file) can fetch once and both hash and extract from the same File.
+export async function fetchFileFromUrl(url: string): Promise<File> {
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Could not fetch file (${res.status}).`);
@@ -113,7 +112,15 @@ export async function extractTextFromUrl(url: string): Promise<string> {
   } catch {
     // keep fallback name
   }
-  const file = new File([arrayBuffer], name, { type: contentType });
+  return new File([arrayBuffer], name, { type: contentType });
+}
+
+// Fetches a file from a (Vercel Blob) URL and extracts its text server-side,
+// reusing the same path as /api/exam/transcribe. The blob's stored
+// content-type plus the filename extension drive type detection in
+// extractFile, so a generic content-type still resolves via the extension.
+export async function extractTextFromUrl(url: string): Promise<string> {
+  const file = await fetchFileFromUrl(url);
   return extractTextOnly(file);
 }
 

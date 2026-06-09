@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { PARSING_SYSTEM_PROMPT, buildParsingUserMessage } from "@/lib/exam-parsing-prompt";
-import { extractTextFromUrl } from "@/lib/exam-extract";
+import { extractTextFromUrl, extractTextOnly, fetchFileFromUrl } from "@/lib/exam-extract";
 import { createPaper, createSession, findCachedParse, ParsedPaper } from "@/lib/exam-db";
 import { computeCacheKey, parseVersion } from "@/lib/exam-cache";
 
@@ -76,20 +76,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Server-side extraction. Fetch each blob and pull text out in Node, where
-  // PDFs/images/Word docs read reliably (the client-side path failed silently
-  // on iPad Safari). The paper and mark scheme are required; an unreadable one
-  // is a hard error. The examiner's report is optional, so a missing or
-  // unreadable report is treated as "no report" and never blocks the run.
-  let paperText: string;
-  let markSchemeText: string;
+  // Fetch the paper and mark scheme as raw files. We hash their bytes for the
+  // parse cache BEFORE extracting, so an identical re-upload can skip both the
+  // Haiku transcription and the Opus parse. (Hashing the extracted text instead
+  // would never match: extraction is an LLM transcription and is not stable.)
+  let paperFile: File;
+  let markSchemeFile: File;
   try {
-    [paperText, markSchemeText] = await Promise.all([
-      extractTextFromUrl(paperUrl),
-      extractTextFromUrl(markSchemeUrl),
+    [paperFile, markSchemeFile] = await Promise.all([
+      fetchFileFromUrl(paperUrl),
+      fetchFileFromUrl(markSchemeUrl),
     ]);
-    paperText = paperText.trim();
-    markSchemeText = markSchemeText.trim();
   } catch {
     await cleanupBlobs();
     return NextResponse.json(
@@ -101,20 +98,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!paperText || !markSchemeText) {
-    await cleanupBlobs();
-    return NextResponse.json(
-      {
-        error:
-          "We couldn't read one of your files. It might be image-based or password-protected. Try a different file.",
-      },
-      { status: 422 },
-    );
+  // Parse cache. Past papers don't change, so if we've already parsed this exact
+  // paper + mark scheme (same file bytes, same parse version) we reuse the stored
+  // parse AND its extracted text, skipping the Haiku transcription and the Opus
+  // call. The examiner's report is NOT part of the key and is never reused: this
+  // upload's own report is extracted and stored below and feeds marking fresh.
+  const cacheKey = computeCacheKey(
+    new Uint8Array(await paperFile.arrayBuffer()),
+    new Uint8Array(await markSchemeFile.arrayBuffer()),
+  );
+  const cacheVersion = parseVersion(PARSING_MODEL);
+
+  let parsed: ParsedPaper | null = null;
+  let totalMarks: number | null = null;
+  let paperText = "";
+  let markSchemeText = "";
+  let cacheHit = false;
+
+  try {
+    const cached = await findCachedParse(cacheKey, cacheVersion);
+    if (cached && Array.isArray(cached.parsed_structure?.sections) && cached.parsed_structure.sections.length > 0) {
+      parsed = cached.parsed_structure;
+      totalMarks = cached.total_marks;
+      paperText = cached.paper_text;
+      markSchemeText = cached.mark_scheme_text;
+      cacheHit = true;
+    }
+  } catch {
+    // A cache lookup failure must never break ingest -- fall through to a fresh
+    // parse as if it were a miss.
+    parsed = null;
   }
 
-  // null means "no report for this subject". Stored as NULL, coerced to "" only
-  // where the prompts need a string. An unreadable report falls back to null
-  // rather than failing the whole paper.
+  // The examiner's report is optional and never cached: extract it fresh on every
+  // upload so marking always uses the report that came with THIS sit. null means
+  // "no report for this subject" (stored as NULL, coerced to "" where prompts
+  // need a string). An unreadable report falls back to null rather than failing.
   let examinerReportText: string | null = null;
   if (examinerReportUrl) {
     try {
@@ -125,33 +144,39 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Parse cache. Past papers don't change, so if we've already parsed this exact
-  // paper + mark scheme (same text, same parse version) we reuse the stored parse
-  // and skip the expensive Opus call. The examiner's report is NOT part of the
-  // key and is never reused: this upload's own report is stored below and feeds
-  // marking fresh, exactly as before. Extraction (above) still runs every time --
-  // it's what produces the text we hash.
-  const cacheKey = computeCacheKey(paperText, markSchemeText);
-  const cacheVersion = parseVersion(PARSING_MODEL);
-
-  let parsed: ParsedPaper | null = null;
-  let totalMarks: number | null = null;
-  let cacheHit = false;
-
-  try {
-    const cached = await findCachedParse(cacheKey, cacheVersion);
-    if (cached && Array.isArray(cached.parsed_structure?.sections) && cached.parsed_structure.sections.length > 0) {
-      parsed = cached.parsed_structure;
-      totalMarks = cached.total_marks;
-      cacheHit = true;
-    }
-  } catch {
-    // A cache lookup failure must never break ingest -- fall through to a fresh
-    // parse as if it were a miss.
-    parsed = null;
-  }
-
   if (!cacheHit) {
+    // Cache miss: extract the paper + mark scheme text from the fetched files,
+    // then parse with Opus. The paper and mark scheme are required; an unreadable
+    // one is a hard error.
+    try {
+      [paperText, markSchemeText] = await Promise.all([
+        extractTextOnly(paperFile),
+        extractTextOnly(markSchemeFile),
+      ]);
+      paperText = paperText.trim();
+      markSchemeText = markSchemeText.trim();
+    } catch {
+      await cleanupBlobs();
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't read one of your files. It might be image-based or password-protected. Try a different file.",
+        },
+        { status: 422 },
+      );
+    }
+
+    if (!paperText || !markSchemeText) {
+      await cleanupBlobs();
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't read one of your files. It might be image-based or password-protected. Try a different file.",
+        },
+        { status: 422 },
+      );
+    }
+
     const client = new Anthropic({ apiKey });
     try {
       const response = await client.messages.create({
