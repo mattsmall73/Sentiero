@@ -36,6 +36,10 @@ export default function AnswerClient(props: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [submitIdx, setSubmitIdx] = useState(0);
   const [error, setError] = useState("");
+  // Set when the marker declines because the answer looks like it belongs to a
+  // different question or paper. Shown inline; the answers stay editable so the
+  // student can re-check the upload and resubmit.
+  const [mismatch, setMismatch] = useState("");
 
   const totalSeconds = props.totalMinutes * 60;
 
@@ -69,6 +73,8 @@ export default function AnswerClient(props: Props) {
   );
 
   function onAnswerChange(questionNumber: string, value: string) {
+    // Editing clears a prior mismatch nudge - the student is acting on it.
+    if (mismatch) setMismatch("");
     setAnswers((prev) => {
       const next = { ...prev, [questionNumber]: value };
       return next;
@@ -148,6 +154,7 @@ export default function AnswerClient(props: Props) {
     setShowConfirm(false);
     setSubmitting(true);
     setError("");
+    setMismatch("");
     setSubmitIdx(0);
     const tick = setInterval(() => {
       setSubmitIdx((i) => Math.min(i + 1, SUBMIT_MESSAGES.length - 1));
@@ -163,6 +170,14 @@ export default function AnswerClient(props: Props) {
       clearInterval(tick);
       if (!res.ok) {
         setError(json.error || "Marking failed.");
+        setSubmitting(false);
+        return;
+      }
+      // The marker declined: the answer looks like it belongs to a different
+      // question or paper. No mark, no coaching - show the blame-free nudge and
+      // drop back to the form with the answers intact so the upload can be fixed.
+      if (json.status === "mismatch") {
+        setMismatch(json.message || "This looks like an answer to a different question. Please check the paper and try again.");
         setSubmitting(false);
         return;
       }
@@ -279,6 +294,8 @@ export default function AnswerClient(props: Props) {
             Submit for marking
           </button>
         </div>
+
+        {mismatch && <div className="exam-notice">{mismatch}</div>}
 
         {error && <div className="error">{error}</div>}
 

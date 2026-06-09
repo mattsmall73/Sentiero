@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { MARKING_SYSTEM_PROMPT, buildMarkingUserMessage } from "@/lib/exam-marking-prompt";
+import { MARKING_SYSTEM_PROMPT, MISMATCH_MESSAGE, buildMarkingUserMessage } from "@/lib/exam-marking-prompt";
 import { getSessionWithPaper, submitSession, MarkingResults } from "@/lib/exam-db";
 import { renderResultsHtml } from "@/lib/exam-results-html";
 
@@ -78,7 +78,25 @@ export async function POST(req: NextRequest) {
       .map((b) => b.text)
       .join("")
       .trim();
-    marking = extractJson(out) as MarkingResults;
+    const parsed = extractJson(out) as Partial<MarkingResults> & {
+      status?: string;
+      mismatch_note?: string;
+    };
+
+    // Detect-and-decline (see MARKING_SYSTEM_PROMPT "BEFORE YOU MARK"). A clear
+    // answer-to-a-different-paper mismatch returns no mark and no coaching. We
+    // leave the session unsubmitted - no submitted_at, no stored results - so
+    // the answers stay editable and the student can re-check the upload, and we
+    // show a short, blame-free nudge instead of a results page. The mismatch_note
+    // is the model's internal reason; it is logged, never shown to the student.
+    if (parsed && parsed.status === "mismatch") {
+      console.log(
+        `[mismatch-decline] session=${body.session_id} note=${(parsed.mismatch_note ?? "").slice(0, 200)}`,
+      );
+      return NextResponse.json({ status: "mismatch", message: MISMATCH_MESSAGE });
+    }
+
+    marking = parsed as MarkingResults;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: `Marking failed: ${message}` }, { status: 502 });
