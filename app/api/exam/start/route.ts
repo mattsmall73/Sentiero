@@ -124,11 +124,18 @@ export async function POST(req: NextRequest) {
       markSchemeText = cached.mark_scheme_text;
       cacheHit = true;
     }
-  } catch {
+  } catch (err) {
     // A cache lookup failure must never break ingest -- fall through to a fresh
-    // parse as if it were a miss.
+    // parse as if it were a miss. Log it, though: a silently-swallowed lookup
+    // error looks identical to a genuine miss and would re-run Opus every time.
+    console.error("[parse-cache] lookup failed; treating as miss:", err);
     parsed = null;
   }
+
+  console.log(
+    `[parse-cache] ${cacheHit ? "HIT (skipping transcription + Opus)" : "MISS (transcribe + parse)"} ` +
+      `key=${cacheKey.slice(0, 12)} version=${cacheVersion} report=${examinerReportUrl ? "yes" : "no"}`,
+  );
 
   // The examiner's report is optional and never cached: extract it fresh on every
   // upload so marking always uses the report that came with THIS sit. null means
