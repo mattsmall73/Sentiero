@@ -1,12 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
+import { TRANSCRIBE_MODEL, TRANSCRIBE_SYSTEM_PROMPT } from "./exam-extract-prompt";
 
 // Server-side extraction for Exam Practice. PDFs and images are transcribed by
 // Haiku; .docx via mammoth; .txt read directly. There is NO client-side
 // extraction and no in-browser pdfjs-dist anywhere — this is the iPad-safe
 // pattern, and the whole point of doing it server-side.
-
-const TRANSCRIBE_MODEL = "claude-haiku-4-5-20251001";
 
 type ContentBlock = Exclude<
   Anthropic.MessageCreateParams["messages"][number]["content"],
@@ -96,11 +95,10 @@ export async function extractFile(file: File): Promise<ExtractionResult> {
   };
 }
 
-// Fetches a file from a (Vercel Blob) URL and extracts its text server-side,
-// reusing the same path as /api/exam/transcribe. The blob's stored
-// content-type plus the filename extension drive type detection in
-// extractFile, so a generic content-type still resolves via the extension.
-export async function extractTextFromUrl(url: string): Promise<string> {
+// Fetches a file from a (Vercel Blob) URL into an in-memory File, without
+// extracting. Split out so callers that need the raw bytes (e.g. the parse cache
+// hashing the file) can fetch once and both hash and extract from the same File.
+export async function fetchFileFromUrl(url: string): Promise<File> {
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Could not fetch file (${res.status}).`);
@@ -113,7 +111,15 @@ export async function extractTextFromUrl(url: string): Promise<string> {
   } catch {
     // keep fallback name
   }
-  const file = new File([arrayBuffer], name, { type: contentType });
+  return new File([arrayBuffer], name, { type: contentType });
+}
+
+// Fetches a file from a (Vercel Blob) URL and extracts its text server-side,
+// reusing the same path as /api/exam/transcribe. The blob's stored
+// content-type plus the filename extension drive type detection in
+// extractFile, so a generic content-type still resolves via the extension.
+export async function extractTextFromUrl(url: string): Promise<string> {
+  const file = await fetchFileFromUrl(url);
   return extractTextOnly(file);
 }
 
@@ -135,8 +141,7 @@ export async function extractTextOnly(file: File, pastedText?: string): Promise<
   const response = await client.messages.create({
     model: TRANSCRIBE_MODEL,
     max_tokens: 8000,
-    system:
-      "You are a faithful transcriber. Extract the full text from the attached file as plain text, preserving question numbering, marks (e.g. '[4 marks]'), and section headings exactly as printed. Do not summarise. Do not add commentary. Output the transcribed text only.",
+    system: TRANSCRIBE_SYSTEM_PROMPT,
     messages: [
       {
         role: "user",
