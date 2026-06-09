@@ -44,12 +44,23 @@ export async function ensureSchema(): Promise<void> {
       paper_text text NOT NULL,
       mark_scheme_text text NOT NULL,
       parsed_structure jsonb NOT NULL,
-      total_marks integer
+      total_marks integer,
+      -- Parse cache (see lib/exam-cache.ts). cache_key is sha256(paper + mark
+      -- scheme text); parse_version stamps the model + prompt that produced the
+      -- parse. A hit on (cache_key, parse_version) reuses the stored parse and
+      -- skips the Opus parse. Nullable so rows that predate the cache simply
+      -- never match and re-parse.
+      cache_key text,
+      parse_version text
     )
   `;
   // Self-migrate existing deployments where the column was created NOT NULL
   // (before the report became optional). Idempotent: a no-op once nullable.
   await sql`ALTER TABLE papers ALTER COLUMN examiner_report_text DROP NOT NULL`;
+  // Self-migrate deployments created before the parse cache existed. Idempotent.
+  await sql`ALTER TABLE papers ADD COLUMN IF NOT EXISTS cache_key text`;
+  await sql`ALTER TABLE papers ADD COLUMN IF NOT EXISTS parse_version text`;
+  await sql`CREATE INDEX IF NOT EXISTS papers_cache_lookup_idx ON papers (cache_key, parse_version)`;
   await sql`
     CREATE TABLE IF NOT EXISTS practice_sessions (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

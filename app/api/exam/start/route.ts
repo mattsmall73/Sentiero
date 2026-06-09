@@ -3,7 +3,8 @@ import { del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { PARSING_SYSTEM_PROMPT, buildParsingUserMessage } from "@/lib/exam-parsing-prompt";
 import { extractTextFromUrl } from "@/lib/exam-extract";
-import { createPaper, createSession, ParsedPaper } from "@/lib/exam-db";
+import { createPaper, createSession, findCachedParse, ParsedPaper } from "@/lib/exam-db";
+import { computeCacheKey, parseVersion } from "@/lib/exam-cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -124,68 +125,98 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const client = new Anthropic({ apiKey });
-  let parsed: ParsedPaper;
+  // Parse cache. Past papers don't change, so if we've already parsed this exact
+  // paper + mark scheme (same text, same parse version) we reuse the stored parse
+  // and skip the expensive Opus call. The examiner's report is NOT part of the
+  // key and is never reused: this upload's own report is stored below and feeds
+  // marking fresh, exactly as before. Extraction (above) still runs every time --
+  // it's what produces the text we hash.
+  const cacheKey = computeCacheKey(paperText, markSchemeText);
+  const cacheVersion = parseVersion(PARSING_MODEL);
+
+  let parsed: ParsedPaper | null = null;
+  let totalMarks: number | null = null;
+  let cacheHit = false;
+
   try {
-    const response = await client.messages.create({
-      model: PARSING_MODEL,
-      max_tokens: 8000,
-      system: PARSING_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: buildParsingUserMessage({
-                total_minutes: totalMinutes,
-                examiner_report_text: examinerReportText ?? "",
-                paper_text: paperText,
-                mark_scheme_text: markSchemeText,
-              }),
-            },
-          ],
-        },
-      ],
-    });
-    const out = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("")
-      .trim();
-    parsed = extractJson(out) as ParsedPaper;
+    const cached = await findCachedParse(cacheKey, cacheVersion);
+    if (cached && Array.isArray(cached.parsed_structure?.sections) && cached.parsed_structure.sections.length > 0) {
+      parsed = cached.parsed_structure;
+      totalMarks = cached.total_marks;
+      cacheHit = true;
+    }
   } catch {
-    await cleanupBlobs();
-    return NextResponse.json(
-      {
-        error:
-          "We couldn't make sense of this paper. Check that all three uploads are the right documents.",
-      },
-      { status: 502 },
-    );
+    // A cache lookup failure must never break ingest -- fall through to a fresh
+    // parse as if it were a miss.
+    parsed = null;
   }
 
-  if (!parsed || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
-    await cleanupBlobs();
-    return NextResponse.json(
-      {
-        error:
-          "We couldn't make sense of this paper. Check that all three uploads are the right documents.",
-      },
-      { status: 502 },
-    );
+  if (!cacheHit) {
+    const client = new Anthropic({ apiKey });
+    try {
+      const response = await client.messages.create({
+        model: PARSING_MODEL,
+        max_tokens: 8000,
+        system: PARSING_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: buildParsingUserMessage({
+                  total_minutes: totalMinutes,
+                  examiner_report_text: examinerReportText ?? "",
+                  paper_text: paperText,
+                  mark_scheme_text: markSchemeText,
+                }),
+              },
+            ],
+          },
+        ],
+      });
+      const out = response.content
+        .filter((b): b is Anthropic.TextBlock => b.type === "text")
+        .map((b) => b.text)
+        .join("")
+        .trim();
+      parsed = extractJson(out) as ParsedPaper;
+    } catch {
+      await cleanupBlobs();
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't make sense of this paper. Check that all three uploads are the right documents.",
+        },
+        { status: 502 },
+      );
+    }
+
+    if (!parsed || !Array.isArray(parsed.sections) || parsed.sections.length === 0) {
+      await cleanupBlobs();
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't make sense of this paper. Check that all three uploads are the right documents.",
+        },
+        { status: 502 },
+      );
+    }
+    totalMarks = typeof parsed.total_marks === "number" ? parsed.total_marks : null;
   }
 
   let paperId: string;
   let sessionId: string;
   try {
     paperId = await createPaper({
-      title: parsed.paper_title || null,
+      title: parsed!.paper_title || null,
       examiner_report_text: examinerReportText,
       paper_text: paperText,
       mark_scheme_text: markSchemeText,
-      parsed_structure: parsed,
-      total_marks: typeof parsed.total_marks === "number" ? parsed.total_marks : null,
+      parsed_structure: parsed!,
+      total_marks: totalMarks,
+      cache_key: cacheKey,
+      parse_version: cacheVersion,
     });
     sessionId = await createSession({
       paper_id: paperId,
@@ -202,7 +233,9 @@ export async function POST(req: NextRequest) {
   // original uploads are no longer needed.
   await cleanupBlobs();
 
-  return NextResponse.json({ session_id: sessionId });
+  // `cached` reports whether the Opus parse was skipped via the cache. The client
+  // ignores it; it exists so a real run can confirm a hit without DB inspection.
+  return NextResponse.json({ session_id: sessionId, cached: cacheHit });
 }
 
 function extractJson(text: string): unknown {

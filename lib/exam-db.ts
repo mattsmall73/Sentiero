@@ -90,21 +90,47 @@ export async function createPaper(input: {
   mark_scheme_text: string;
   parsed_structure: ParsedPaper;
   total_marks: number | null;
+  // Parse-cache identity (see lib/exam-cache.ts). Stamped on every row so the
+  // first upload of a paper seeds the cache and later uploads can find it.
+  cache_key: string;
+  parse_version: string;
 }): Promise<string> {
   await ensureSchema();
   const { rows } = await sql<{ id: string }>`
-    INSERT INTO papers (title, examiner_report_text, paper_text, mark_scheme_text, parsed_structure, total_marks)
+    INSERT INTO papers (title, examiner_report_text, paper_text, mark_scheme_text, parsed_structure, total_marks, cache_key, parse_version)
     VALUES (
       ${input.title},
       ${input.examiner_report_text},
       ${input.paper_text},
       ${input.mark_scheme_text},
       ${JSON.stringify(input.parsed_structure)}::jsonb,
-      ${input.total_marks}
+      ${input.total_marks},
+      ${input.cache_key},
+      ${input.parse_version}
     )
     RETURNING id
   `;
   return rows[0].id;
+}
+
+// Look up a previously parsed paper by its cache identity. A hit returns just
+// the parse output (structure + total) to copy onto the new upload's row; the
+// caller still stores this upload's own report and text, so marking is
+// unaffected. Only the expensive Opus parse is skipped. The oldest matching row
+// wins, so a concurrent double-miss settles on a single stable seed.
+export async function findCachedParse(
+  cache_key: string,
+  parse_version: string,
+): Promise<{ parsed_structure: ParsedPaper; total_marks: number | null } | null> {
+  await ensureSchema();
+  const { rows } = await sql<{ parsed_structure: ParsedPaper; total_marks: number | null }>`
+    SELECT parsed_structure, total_marks
+    FROM papers
+    WHERE cache_key = ${cache_key} AND parse_version = ${parse_version}
+    ORDER BY created_at ASC
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
 }
 
 export async function createSession(input: {
