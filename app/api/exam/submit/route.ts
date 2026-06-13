@@ -16,15 +16,6 @@ export const maxDuration = 300;
 
 const MARKING_MODEL = "claude-opus-4-8";
 
-// Marking must be reproducible: the same answer marked twice should get the same
-// mark. With temperature unset the SDK defaults to 1.0, which made identical
-// input swing run-to-run (observed 13/9/13 on a 30-mark question). Pin it to 0 so
-// the only residual variance is the model's own determinism, not sampling noise.
-// Marking is a judgement against a fixed mark scheme, not creative writing - there
-// is no upside to sampling here. The mismatch gate (lib/exam-mismatch-check.ts) is
-// pinned to 0 for the same reason.
-const MARKING_TEMPERATURE = 0;
-
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -81,7 +72,6 @@ export async function POST(req: NextRequest) {
     const response = await client.messages.create({
       model: MARKING_MODEL,
       max_tokens: 16000,
-      temperature: MARKING_TEMPERATURE,
       system: MARKING_SYSTEM_PROMPT,
       messages: [
         {
