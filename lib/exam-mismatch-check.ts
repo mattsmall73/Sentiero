@@ -19,6 +19,13 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const MISMATCH_CHECK_MODEL = "claude-opus-4-8";
 
+// This gate decides a binary, high-stakes thing (mark vs decline), so it must be
+// reproducible: the same answer must not be marked on one sit and declined on the
+// next. With temperature unset the SDK defaults to 1.0; a borderline case could
+// flip between runs. Pin it to 0 - this is classification against a fixed bar, not
+// generation, so sampling only adds noise.
+const MISMATCH_CHECK_TEMPERATURE = 0;
+
 // Family-authored, final copy (not a voice-pass placeholder): shown to the
 // student when the marker declines because the answer looks like it belongs to
 // a different question or paper. Blame-free, plain English, no em-dashes, no
@@ -123,6 +130,7 @@ export async function runMismatchCheck(
     const response = await client.messages.create({
       model: MISMATCH_CHECK_MODEL,
       max_tokens: 1024,
+      temperature: MISMATCH_CHECK_TEMPERATURE,
       system: MISMATCH_CHECK_SYSTEM_PROMPT,
       messages: [
         {
