@@ -258,8 +258,15 @@ html.sentiero-landing-active body {
 }
 .sentiero-landing .app-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Three tools now: wrap gracefully from 3 across to 2 to 1 as width drops,
+   * rather than stranding the third card on its own row at two columns. */
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+}
+@media (max-width: 980px) {
+  .sentiero-landing .app-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 .sentiero-landing .app-card {
   border: 1px solid var(--line);
