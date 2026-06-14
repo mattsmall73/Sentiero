@@ -55,6 +55,17 @@ const SUBJECTS: { name: string; examples: [string, string, string] }[] = [
 
 const LEVELS = ["GCSE", "A-level", "Undergraduate"];
 
+// NOTE (voice pass): reassurance lines for the generation wait, working drafts
+// for the family. Generation calls Opus and can take a few seconds, so the
+// screen rotates these rather than sitting on one static line that reads as
+// frozen - the same treatment the coaching wait already gets.
+const GENERATE_MESSAGES = [
+  "Reading your topic...",
+  "Shaping a fair question...",
+  "Working out what a strong answer looks like...",
+  "Almost ready...",
+];
+
 export default function Page() {
   const router = useRouter();
   const [subject, setSubject] = useState(SUBJECTS[0].name);
@@ -62,6 +73,7 @@ export default function Page() {
   const [topic, setTopic] = useState("");
   const [userName, setUserName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [genIdx, setGenIdx] = useState(0);
   const [error, setError] = useState("");
 
   // Examples matched to the chosen subject (falls back to the default subject's
@@ -75,6 +87,12 @@ export default function Page() {
     if (!canStart) return;
     setSubmitting(true);
     setError("");
+    setGenIdx(0);
+    // Rotate the reassurance lines while Opus generates, so a slow call doesn't
+    // read as frozen. Cleared on every exit path (success navigates away).
+    const tick = setInterval(() => {
+      setGenIdx((i) => Math.min(i + 1, GENERATE_MESSAGES.length - 1));
+    }, 5000);
     try {
       const res = await fetch("/api/practice/generate", {
         method: "POST",
@@ -90,17 +108,21 @@ export default function Page() {
       try {
         json = await res.json();
       } catch {
+        clearInterval(tick);
         setError("Something went wrong. Try again.");
         setSubmitting(false);
         return;
       }
       if (!res.ok || !json.attempt_id) {
+        clearInterval(tick);
         setError(json.error || "Something went wrong.");
         setSubmitting(false);
         return;
       }
+      clearInterval(tick);
       router.push(`/practice/${json.attempt_id}`);
     } catch (err) {
+      clearInterval(tick);
       const message = err instanceof Error ? err.message : "Network error";
       setError(message);
       setSubmitting(false);
@@ -122,11 +144,14 @@ export default function Page() {
         {submitting ? (
           <div className="card">
             <div className="loading">
-              <div className="loading-text">Writing you a question...</div>
+              <div className="loading-text">{GENERATE_MESSAGES[genIdx]}</div>
               <div className="loading-dots">
                 <span />
                 <span />
                 <span />
+              </div>
+              <div style={{ marginTop: 18, fontSize: 13, color: "var(--panel-muted)" }}>
+                This usually takes a few seconds. Hold tight.
               </div>
             </div>
           </div>
