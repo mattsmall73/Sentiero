@@ -36,13 +36,21 @@ export function renderPracticeResultsHtml(input: {
   const max = coaching.progress_max || 100;
   const pct = Math.round((score / max) * 100);
   const band = (coaching.band_label || "").trim();
+  // At the ceiling the answer would score full marks at this level: the coach
+  // releases rather than corrects, so the screen reads as arrival, not a to-do.
+  const atCeiling = coaching.at_ceiling === true;
 
   // The borderline note is shown honestly: the score was rounded up to the edge
   // of this band, and the coaching names what would secure it cleanly. We do not
   // hide it, but we frame it as encouragement, not a caveat that deflates.
-  const borderlineHtml = coaching.borderline
-    ? `<div class="borderline">On the edge of this level. The next step below is the thing that settles it.</div>`
-    : "";
+  // It never applies at the ceiling (the top is not a boundary).
+  const borderlineHtml =
+    coaching.borderline && !atCeiling
+      ? `<div class="borderline">On the edge of this level. The next step below is the thing that settles it.</div>`
+      : "";
+
+  const encouragement =
+    coaching.encouragement && coaching.encouragement.trim() ? coaching.encouragement.trim() : "";
 
   const coachingLines: string[] = [];
   if (coaching.what_worked && coaching.what_worked.trim()) {
@@ -52,22 +60,44 @@ export function renderPracticeResultsHtml(input: {
       )}</p></div>`,
     );
   }
-  if (coaching.what_a_strong_answer_adds && coaching.what_a_strong_answer_adds.trim()) {
+  if (atCeiling) {
+    // The "done" block: honest recognition that the answer maxes the scale for
+    // this level. Carries the coach's release line; falls back to a plain,
+    // non-flattering statement if the model left it empty.
+    const release =
+      encouragement ||
+      "This would score full marks at this level. There's nothing left to add here - you're there.";
     coachingLines.push(
-      `<div class="coach-block"><div class="coach-label">What a strong answer also does</div><p>${escapeHtml(
-        coaching.what_a_strong_answer_adds.trim(),
+      `<div class="coach-block ceiling"><div class="coach-label">You're there</div><p>${escapeHtml(
+        release,
       )}</p></div>`,
     );
+    // A next step at the ceiling is only ever a genuinely optional refinement,
+    // already framed with its trade-off by the coach. Render it softly, never as
+    // a correction the student owes.
+    if (coaching.next_step && coaching.next_step.trim()) {
+      coachingLines.push(
+        `<div class="coach-block"><div class="coach-label">Only if you ever want to push further</div><p>${escapeHtml(
+          coaching.next_step.trim(),
+        )}</p></div>`,
+      );
+    }
+  } else {
+    if (coaching.what_a_strong_answer_adds && coaching.what_a_strong_answer_adds.trim()) {
+      coachingLines.push(
+        `<div class="coach-block"><div class="coach-label">What a strong answer also does</div><p>${escapeHtml(
+          coaching.what_a_strong_answer_adds.trim(),
+        )}</p></div>`,
+      );
+    }
+    if (coaching.next_step && coaching.next_step.trim()) {
+      coachingLines.push(
+        `<div class="coach-block next"><div class="coach-label">Your next step</div><p>${escapeHtml(
+          coaching.next_step.trim(),
+        )}</p></div>`,
+      );
+    }
   }
-  if (coaching.next_step && coaching.next_step.trim()) {
-    coachingLines.push(
-      `<div class="coach-block next"><div class="coach-label">Your next step</div><p>${escapeHtml(
-        coaching.next_step.trim(),
-      )}</p></div>`,
-    );
-  }
-  const encouragement =
-    coaching.encouragement && coaching.encouragement.trim() ? coaching.encouragement.trim() : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -128,8 +158,13 @@ export function renderPracticeResultsHtml(input: {
 
   .coach-block { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; margin-bottom: 16px; color: var(--panel-ink); box-shadow: var(--panel-shadow); }
   .coach-block.next { background: rgba(160,114,66,0.1); border: 1px solid rgba(244,236,224,0.14); color: var(--on-dark); }
+  /* The "you're there" release: the warmest surface on the page, a gold wash on
+   * the dark surround, so arrival reads as the win it is rather than a to-do. */
+  .coach-block.ceiling { background-image: var(--accent-gradient); color: #fff; border: none; box-shadow: 0 2px 12px rgba(160,114,66,0.30); }
+  .coach-block.ceiling p { font-size: 16px; }
   .coach-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; font-weight: 600; margin-bottom: 8px; color: var(--accent-panel-text); }
   .coach-block.next .coach-label { color: var(--accent-deep); }
+  .coach-block.ceiling .coach-label { color: rgba(255,255,255,0.92); }
   .coach-block p { margin: 0; font-size: 15px; line-height: 1.6; }
   .encouragement { text-align: center; font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--accent-deep); font-size: 17px; margin: 26px 0 0; line-height: 1.5; }
 
@@ -168,7 +203,7 @@ export function renderPracticeResultsHtml(input: {
   </div>
 
   ${coachingLines.join("\n  ")}
-  ${encouragement ? `<p class="encouragement">${escapeHtml(encouragement)}</p>` : ""}
+  ${!atCeiling && encouragement ? `<p class="encouragement">${escapeHtml(encouragement)}</p>` : ""}
 </div>
 </body>
 </html>`;

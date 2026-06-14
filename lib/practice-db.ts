@@ -41,6 +41,11 @@ export type PracticeCoaching = {
   // true when the answer sat on a band boundary and was resolved upward. The
   // results screen surfaces this honestly rather than implying a clean placing.
   borderline?: boolean;
+  // true when the answer would score full marks at the stated level - the ceiling
+  // of the scale for that level. The coach then releases rather than correcting:
+  // no manufactured next step, and the encouragement carries an honest "you're
+  // there" recognition. The results screen shows this as arrival, not a to-do.
+  at_ceiling?: boolean;
   what_worked: string;
   what_a_strong_answer_adds: string;
   next_step: string;
