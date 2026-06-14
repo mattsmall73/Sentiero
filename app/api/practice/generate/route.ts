@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   const level = (body.level ?? "").toString().trim();
   const userName = (body.user_name ?? "").toString().trim() || null;
   if (!topic) {
-    return NextResponse.json({ error: "Name a topic to practice." }, { status: 400 });
+    return NextResponse.json({ error: "Name a topic to practise." }, { status: 400 });
   }
   if (topic.length > 200) {
     return NextResponse.json({ error: "That topic is a little long. Try a shorter one." }, { status: 400 });

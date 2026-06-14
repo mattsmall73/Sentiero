@@ -134,7 +134,7 @@ export default function HomePage() {
                   <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" />
                 </svg>
               </div>
-              <h3>Practice a past paper</h3>
+              <h3>Practise a past paper</h3>
               <div className="flow">
                 <div className="flow-step">
                   <span className="flow-dot" />
@@ -194,7 +194,7 @@ export default function HomePage() {
                   <path d="M9 20h6" />
                 </svg>
               </div>
-              <h3>Practice a topic</h3>
+              <h3>Practise a topic</h3>
               <div className="flow">
                 <div className="flow-step">
                   <span className="flow-dot" />
@@ -223,7 +223,7 @@ export default function HomePage() {
                 </div>
               </div>
               <span className="app-link">
-                Start practicing{" "}
+                Start practising{" "}
                 <svg
                   width="15"
                   height="15"
