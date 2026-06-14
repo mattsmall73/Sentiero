@@ -1,31 +1,38 @@
 // Verification for marking REPRODUCIBILITY (the 13/9/13 swing investigation).
 //
 // This is a REAL run, not a build check. It marks ONE fixed answer N times with
-// the live MARKING_SYSTEM_PROMPT and reports the spread of marks across runs. It
-// isolates the three things the investigation cares about:
+// the live MARKING_SYSTEM_PROMPT and reports the spread of marks across runs.
 //
-//   1. TEMPERATURE. Sweep it with the env var. The product call is pinned to 0
-//      (app/api/exam/submit/route.ts). Run this at TEMPERATURE=0 and at
-//      TEMPERATURE=1 to see the spread collapse - that is the evidence that
-//      sampling, not the prompt or the input, was driving the run-to-run swing.
+// IMPORTANT: claude-opus-4-8 does NOT accept a temperature (or top_p / top_k)
+// parameter - the Opus 4.7/4.8 family removed sampling controls, and sending one
+// returns 400 "temperature is deprecated for this model". So there is no
+// temperature knob to turn down: this harness sends exactly what the product
+// sends (no sampling param) and measures the spread that remains. That spread is
+// the model's own run-to-run nondeterminism plus any discretion the prompt leaves
+// open - it is NOT sampling noise, because there is no sampling parameter in play.
 //
-//   2. BYTE-IDENTICAL INPUT. The marking user message is built ONCE, hashed, and
+// What the harness isolates:
+//
+//   1. BYTE-IDENTICAL INPUT. The marking user message is built ONCE, hashed, and
 //      the exact same string is sent on every run. The script prints the hash so
 //      you can see the input never varied. (In production the same guarantee holds
 //      structurally: marking reads paper_text / mark_scheme_text /
 //      examiner_report_text / parsed_structure straight from immutable DB columns,
 //      and buildMarkingUserMessage is a pure function - no cache or report path
 //      mutates the marking input between sits. The caches live upstream at upload.)
+//      So any spread the harness reports is the model call, not the input.
 //
-//   3. PROMPT ANCHORING. The fixture is a 30-mark, level-banded essay question -
-//      the same shape as the reported case. The per-question spread table shows
-//      whether any residual variance at temperature 0 is a within-band wobble or a
-//      band-boundary flip (e.g. Level 3 11-15 <-> Level 2), which is what to chase
-//      in the prompt if temperature 0 alone is not tight enough.
+//   2. PROMPT ANCHORING - the real lever here. The fixture is a 30-mark,
+//      level-banded essay question, the same shape as the reported case. The
+//      per-question spread table flags whether the variance is a within-band
+//      wobble or a band-boundary FLIP (e.g. Level 3 11-15 <-> Level 2 6-10, which
+//      is exactly the 13<->9 swing). Since temperature can't be lowered, tightening
+//      the mark scheme's within-band / boundary guidance in MARKING_SYSTEM_PROMPT
+//      is the lever to test: run this harness before and after a prompt change and
+//      compare the spread.
 //
 // Run:  ANTHROPIC_API_KEY=sk-... npx tsx scripts/verify-marking-determinism.ts
-//       ANTHROPIC_API_KEY=sk-... RUNS=5 TEMPERATURE=0 npx tsx scripts/verify-marking-determinism.ts
-//       ANTHROPIC_API_KEY=sk-... RUNS=5 TEMPERATURE=1 npx tsx scripts/verify-marking-determinism.ts
+//       ANTHROPIC_API_KEY=sk-... RUNS=8 npx tsx scripts/verify-marking-determinism.ts
 // Without a key it exits 0 with a SKIP notice (so CI without secrets is quiet),
 // printing the live command to run.
 
@@ -158,13 +165,12 @@ async function main() {
   if (!apiKey) {
     console.log("SKIP: ANTHROPIC_API_KEY not set - this verification needs live marking calls.");
     console.log(
-      "Run it with: ANTHROPIC_API_KEY=sk-... RUNS=5 TEMPERATURE=0 npx tsx scripts/verify-marking-determinism.ts",
+      "Run it with: ANTHROPIC_API_KEY=sk-... RUNS=8 npx tsx scripts/verify-marking-determinism.ts",
     );
     return;
   }
 
   const runs = Math.max(2, Number(process.env.RUNS ?? 5));
-  const temperature = Number(process.env.TEMPERATURE ?? 0);
 
   // Build the marking input ONCE and reuse the identical bytes on every run. The
   // hash proves step 2: the answer / mark scheme / examiner's report reaching the
@@ -180,7 +186,7 @@ async function main() {
   });
   const inputHash = createHash("sha256").update(userMessage, "utf8").digest("hex");
 
-  console.log(`\nMarking the same answer ${runs}x  |  temperature=${temperature}  |  model=${MARKING_MODEL}`);
+  console.log(`\nMarking the same answer ${runs}x  |  model=${MARKING_MODEL} (no temperature - unsupported)`);
   console.log(`Input sha256 (identical every run): ${inputHash}\n`);
 
   const client = new Anthropic({ apiKey });
@@ -192,7 +198,6 @@ async function main() {
     const response = await client.messages.create({
       model: MARKING_MODEL,
       max_tokens: 16000,
-      temperature,
       system: MARKING_SYSTEM_PROMPT,
       messages: [{ role: "user", content: [{ type: "text", text: userMessage }] }],
     });
@@ -225,19 +230,25 @@ async function main() {
     );
   }
 
-  // The product call runs at temperature 0. A nonzero total-mark range there is the
-  // signal to tighten the prompt's within-band guidance (step 3); a zero range
-  // confirms temperature was the cause (step 1).
-  if (temperature === 0 && t.range > 0) {
+  // There is no temperature to tune on this model, so a nonzero range is the
+  // model's own nondeterminism plus prompt band-discretion - the only lever is the
+  // prompt. A zero range means marking is already reproducible on this fixture.
+  if (t.range > 0) {
     console.log(
-      `\nNOTE: residual range ${t.range} at temperature 0. Input was byte-identical (hash above), so this`,
+      `\nNOTE: total-mark range ${t.range} on byte-identical input (hash above). This is NOT sampling`,
     );
     console.log(
-      "is band-discretion in the prompt, not sampling. Look at where the answer sits against the",
+      "noise - claude-opus-4-8 has no temperature parameter. It is the model's own run-to-run variance",
     );
-    console.log("level bands and whether the prompt gives the model a tie-break within a band.");
-  } else if (temperature === 0) {
-    console.log("\nPASS: zero spread at temperature 0 on byte-identical input. Marking is reproducible.");
+    console.log(
+      "plus the discretion the mark scheme's level bands leave open. To tighten it, give the prompt a",
+    );
+    console.log(
+      "within-band tie-break and an explicit boundary rule (which side of Level 3/Level 2 a borderline",
+    );
+    console.log("answer falls), then re-run this harness and compare the spread.");
+  } else {
+    console.log("\nPASS: zero spread across runs on byte-identical input. Marking is reproducible on this fixture.");
   }
 }
 
