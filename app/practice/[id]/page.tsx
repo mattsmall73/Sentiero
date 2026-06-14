@@ -17,8 +17,8 @@ export default async function Page({ params }: { params: { id: string } }) {
       <div className="exam-root">
         <div className="app">
           <div className="brand">
-            <div className="brand-mark">Sentiero · Practice</div>
-            <h1>Practice</h1>
+            <div className="brand-mark">Sentiero · Practise</div>
+            <h1>Practise</h1>
           </div>
           <div className="card">
             <h2>Database not set up yet</h2>

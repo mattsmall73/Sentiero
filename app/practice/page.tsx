@@ -133,8 +133,8 @@ export default function Page() {
     <div className="exam-root">
       <div className="app">
         <div className="brand">
-          <div className="brand-mark">Sentiero · Practice</div>
-          <h1>Practice</h1>
+          <div className="brand-mark">Sentiero · Practise</div>
+          <h1>Practise</h1>
           <div className="tagline">Name what you&apos;re revising. Get a question, and warm coaching back.</div>
           <div className="brand-back">
             <a href="/">← back to home</a>

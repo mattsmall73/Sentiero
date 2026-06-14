@@ -124,7 +124,7 @@ export default function PracticeClient(props: Props) {
       <div className="exam-root">
         <div className="app">
           <div className="brand">
-            <div className="brand-mark">Sentiero · Practice</div>
+            <div className="brand-mark">Sentiero · Practise</div>
             <h1>Coaching</h1>
             <div className="tagline">This takes a few seconds. Hold tight.</div>
           </div>
