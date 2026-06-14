@@ -100,12 +100,19 @@ export async function ensureSchema(): Promise<void> {
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
       created_at timestamptz NOT NULL DEFAULT now(),
       subject text NOT NULL,
+      -- The chosen level (GCSE / A-level / Undergraduate). Required at entry: it
+      -- anchors what a strong answer is, so the progress score is marked against
+      -- a real standard rather than a floating one. Nullable at the DB only to
+      -- keep the self-migrate path safe; the API always supplies it.
+      level text,
       topic text NOT NULL,
       question text NOT NULL,
       marking_guide jsonb NOT NULL,
       user_name text
     )
   `;
+  // Self-migrate a practice_prompts table created before level existed.
+  await sql`ALTER TABLE practice_prompts ADD COLUMN IF NOT EXISTS level text`;
   await sql`
     CREATE TABLE IF NOT EXISTS practice_attempts (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

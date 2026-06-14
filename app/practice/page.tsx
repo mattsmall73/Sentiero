@@ -12,14 +12,22 @@ import "../exam/exam.css";
 // NOTE (voice pass): all student-facing copy here is a working draft for the
 // family's voice pass, flagged like the other tools - not final wording.
 
+// Politics first by decision, so it is the default subject; the field is still
+// a confirmed input, not a silent assumption. Level is required and offered as a
+// fixed set, because it anchors what a strong answer is.
+const LEVELS = ["GCSE", "A-level", "Undergraduate"];
+
 export default function Page() {
   const router = useRouter();
+  const [subject, setSubject] = useState("Politics");
+  const [level, setLevel] = useState("");
   const [topic, setTopic] = useState("");
   const [userName, setUserName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const canStart = topic.trim().length > 0 && !submitting;
+  const canStart =
+    subject.trim().length > 0 && level.length > 0 && topic.trim().length > 0 && !submitting;
 
   async function start() {
     if (!canStart) return;
@@ -29,7 +37,12 @@ export default function Page() {
       const res = await fetch("/api/practice/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.trim(), user_name: userName.trim() || null }),
+        body: JSON.stringify({
+          subject: subject.trim(),
+          level,
+          topic: topic.trim(),
+          user_name: userName.trim() || null,
+        }),
       });
       let json: { attempt_id?: string; error?: string };
       try {
@@ -79,10 +92,43 @@ export default function Page() {
           <>
             <div className="card">
               <div className="step-label">Step one</div>
+              <h2>Subject and level</h2>
+              <p style={{ fontSize: 14, color: "var(--panel-muted)", marginTop: -8, marginBottom: 14 }}>
+                Your level matters: the same topic is a different question at GCSE and at degree
+                level, and it&apos;s how we judge what a strong answer looks like for you.
+              </p>
+              <input
+                className="name-input"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Subject"
+                aria-label="Subject"
+                style={{ marginBottom: 16 }}
+              />
+              <div className="time-manual-label" style={{ marginBottom: 10 }}>
+                Level
+              </div>
+              <div className="time-options">
+                {LEVELS.map((lv) => (
+                  <button
+                    key={lv}
+                    type="button"
+                    className={`time-btn${level === lv ? " selected" : ""}`}
+                    onClick={() => setLevel(lv)}
+                  >
+                    <span className="label">{lv}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="step-label">Step two</div>
               <h2>What are you revising?</h2>
               <p style={{ fontSize: 14, color: "var(--panel-muted)", marginTop: -8, marginBottom: 14 }}>
-                Name a politics topic and we&apos;ll write you a question on it. For example: UK
-                pressure groups, the role of the Supreme Court, or first-past-the-post.
+                Name a topic and we&apos;ll write you a question on it. For example: UK pressure
+                groups, the role of the Supreme Court, or first-past-the-post.
               </p>
               <input
                 className="name-input"

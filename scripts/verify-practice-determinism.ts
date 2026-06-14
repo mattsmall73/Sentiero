@@ -30,6 +30,8 @@ import type { MarkingGuide, PracticeCoaching } from "../lib/practice-db";
 
 const MARKING_MODEL = "claude-opus-4-8";
 
+const SUBJECT = "Politics";
+const LEVEL = "A-level";
 const TOPIC = "UK pressure groups";
 const QUESTION =
   "Evaluate the view that pressure groups undermine rather than strengthen democracy in the UK.";
@@ -109,6 +111,8 @@ async function main() {
   const runs = Math.max(2, Number(process.env.RUNS ?? 5));
 
   const userMessage = buildPracticeMarkingUserMessage({
+    subject: SUBJECT,
+    level: LEVEL,
     topic: TOPIC,
     question: QUESTION,
     marking_guide: JSON.stringify(MARKING_GUIDE, null, 2),

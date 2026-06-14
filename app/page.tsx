@@ -199,7 +199,8 @@ export default function HomePage() {
                 <div className="flow-step">
                   <span className="flow-dot" />
                   <div className="flow-text">
-                    <span className="flow-label">You name</span>A topic you&apos;re revising
+                    <span className="flow-label">You name</span>Your level and a topic you&apos;re
+                    revising
                   </div>
                 </div>
                 <div className="flow-step">

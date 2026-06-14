@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
             {
               type: "text",
               text: buildPracticeMarkingUserMessage({
+                subject: row.prompt.subject,
+                level: row.prompt.level ?? "",
                 topic: row.prompt.topic,
                 question: row.prompt.question,
                 marking_guide: JSON.stringify(row.prompt.marking_guide, null, 2),
@@ -97,6 +99,8 @@ export async function POST(req: NextRequest) {
   coaching.progress_score = Math.max(0, Math.min(max, Math.round(coaching.progress_score)));
 
   const html = renderPracticeResultsHtml({
+    subject: row.prompt.subject,
+    level: row.prompt.level ?? "",
     topic: row.prompt.topic,
     question: row.prompt.question,
     user_name: row.attempt.user_name,

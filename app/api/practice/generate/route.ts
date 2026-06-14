@@ -10,11 +10,15 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const GENERATION_MODEL = "claude-opus-4-8";
-// Politics first by decision: the hardest case (open essay questions with no
-// fixed answer) and so the right stress test for the progress score.
-const SUBJECT = "politics";
+// Politics first by decision (the hardest case: open essay questions with no
+// fixed answer), so it is the default subject. Subject is still a confirmed
+// entry field, not a silent assumption.
+const DEFAULT_SUBJECT = "Politics";
+// The levels offered at entry. Level is required: it anchors what "good" means,
+// so the question and the score are marked against a real standard.
+const ALLOWED_LEVELS = ["GCSE", "A-level", "Undergraduate"];
 
-type Body = { topic?: string; user_name?: string | null };
+type Body = { subject?: string; level?: string; topic?: string; user_name?: string | null };
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -36,12 +40,22 @@ export async function POST(req: NextRequest) {
   }
 
   const topic = (body.topic ?? "").toString().trim();
+  const subject = (body.subject ?? "").toString().trim() || DEFAULT_SUBJECT;
+  const level = (body.level ?? "").toString().trim();
   const userName = (body.user_name ?? "").toString().trim() || null;
   if (!topic) {
     return NextResponse.json({ error: "Name a topic to practise." }, { status: 400 });
   }
   if (topic.length > 200) {
     return NextResponse.json({ error: "That topic is a little long. Try a shorter one." }, { status: 400 });
+  }
+  // Level is non-negotiable: without it, the question and the progress score mark
+  // against a floating, invented standard. Require one of the offered levels.
+  if (!level) {
+    return NextResponse.json({ error: "Choose a level so we mark to the right standard." }, { status: 400 });
+  }
+  if (!ALLOWED_LEVELS.includes(level)) {
+    return NextResponse.json({ error: "That level isn't one we offer yet." }, { status: 400 });
   }
 
   const client = new Anthropic({ apiKey });
@@ -56,7 +70,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "user",
-          content: [{ type: "text", text: buildGenerationUserMessage({ subject: SUBJECT, topic }) }],
+          content: [{ type: "text", text: buildGenerationUserMessage({ subject, level, topic }) }],
         },
       ],
     });
@@ -88,7 +102,8 @@ export async function POST(req: NextRequest) {
   let attemptId: string;
   try {
     const promptId = await createPrompt({
-      subject: SUBJECT,
+      subject,
+      level,
       topic,
       question,
       marking_guide: markingGuide,

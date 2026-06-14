@@ -11,6 +11,8 @@ import { PracticeCoaching } from "./practice-db";
 // candidates flagged for the family's voice pass, like the other tool copy.
 
 export function renderPracticeResultsHtml(input: {
+  subject: string;
+  level: string;
   topic: string;
   question: string;
   user_name: string | null;
@@ -18,13 +20,16 @@ export function renderPracticeResultsHtml(input: {
   answer: string;
   coaching: PracticeCoaching;
 }): string {
-  const { topic, question, user_name, practised_at, answer, coaching } = input;
+  const { subject, level, topic, question, user_name, practised_at, answer, coaching } = input;
 
   const dateStr = practised_at.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
+  // The level is shown plainly: it is the standard the progress score was marked
+  // against, so naming it keeps the number honest rather than floating.
+  const standard = [subject, level].map((s) => (s || "").trim()).filter(Boolean).join(" · ");
 
   const forLine = user_name ? `For ${escapeHtml(user_name)}` : "Practice";
   const score = clampScore(coaching.progress_score, coaching.progress_max || 100);
@@ -139,7 +144,7 @@ export function renderPracticeResultsHtml(input: {
   <header class="top">
     <div class="for-line">${forLine}</div>
     <h1>${escapeHtml(topic)}</h1>
-    <div class="meta-row">${escapeHtml(dateStr)}</div>
+    <div class="meta-row">${standard ? `${escapeHtml(standard)}<span class="dot"> · </span>` : ""}${escapeHtml(dateStr)}</div>
   </header>
 
   <div class="progress">

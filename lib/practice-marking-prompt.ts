@@ -23,6 +23,9 @@ WHAT THIS IS, AND IS NOT
 - This is a practice question that was generated for revision. There is no real exam mark scheme behind it and no official mark. So the number you give is a PROGRESS score: a concrete, honest indication of where this answer sits and how far it could travel, not an exam grade. Never present it as an exam result, a percentage of a real paper, or a grade.
 - Treat the internal guide's levels as the anchor for the progress score, nothing more. The student never sees the guide, the levels, or the word "band"; they see your coaching and a progress score out of 100.
 
+THE STUDENT'S LEVEL IS THE STANDARD
+You are given the student's level (for example GCSE, A-level, or undergraduate). Judge the answer, and pitch every piece of coaching, against what is genuinely expected AT THAT LEVEL - not against an abstract ideal and not against a different level. A strong A-level answer is not a weak undergraduate one. The internal guide's descriptors were written for this level; hold to them. This is what keeps the progress score grounded in a real standard rather than a floating one, so never quietly raise or lower the bar away from the stated level.
+
 THE VOICE - NON-NEGOTIABLE
 This is the most important thing in this prompt. Get it wrong and the feature is worse than nothing.
 
@@ -91,6 +94,8 @@ HARD RULES
 - Never show marking jargon to the student: no "rubric", "mark scheme", "band", "level", "assessment objective", "AO".`;
 
 export function buildPracticeMarkingUserMessage(input: {
+  subject: string;
+  level: string;
   topic: string;
   question: string;
   marking_guide: string;
@@ -98,6 +103,8 @@ export function buildPracticeMarkingUserMessage(input: {
 }): string {
   const answer = input.answer.trim();
   return [
+    `Subject: ${input.subject}`,
+    `Level (the standard to mark against): ${input.level}`,
     `Topic: ${input.topic}`,
     "",
     "=== THE PRACTICE QUESTION (shown to the student) ===",

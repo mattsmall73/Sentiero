@@ -51,6 +51,10 @@ export type PracticePromptRow = {
   id: string;
   created_at: string;
   subject: string;
+  // The student's chosen level (for example "A-level"). Required: it anchors what
+  // a strong answer is, so generation and marking work to a real standard rather
+  // than a floating, invented one. Captured/confirmed at entry, never inferred.
+  level: string;
   topic: string;
   question: string;
   marking_guide: MarkingGuide;
@@ -71,6 +75,7 @@ export type PracticeAttemptRow = {
 
 export async function createPrompt(input: {
   subject: string;
+  level: string;
   topic: string;
   question: string;
   marking_guide: MarkingGuide;
@@ -78,9 +83,10 @@ export async function createPrompt(input: {
 }): Promise<string> {
   await ensureSchema();
   const { rows } = await sql<{ id: string }>`
-    INSERT INTO practice_prompts (subject, topic, question, marking_guide, user_name)
+    INSERT INTO practice_prompts (subject, level, topic, question, marking_guide, user_name)
     VALUES (
       ${input.subject},
+      ${input.level},
       ${input.topic},
       ${input.question},
       ${JSON.stringify(input.marking_guide)}::jsonb,
@@ -112,7 +118,7 @@ export async function getAttemptWithPrompt(
     SELECT
       a.id, a.prompt_id, a.created_at, a.updated_at, a.user_name, a.answer,
       a.submitted_at, a.coaching_results, a.results_html,
-      p.id AS p_id, p.created_at AS p_created_at, p.subject, p.topic,
+      p.id AS p_id, p.created_at AS p_created_at, p.subject, p.level, p.topic,
       p.question, p.marking_guide, p.user_name AS p_user_name
     FROM practice_attempts a
     JOIN practice_prompts p ON p.id = a.prompt_id
@@ -137,6 +143,7 @@ export async function getAttemptWithPrompt(
       id: r.p_id,
       created_at: r.p_created_at,
       subject: r.subject,
+      level: r.level,
       topic: r.topic,
       question: r.question,
       marking_guide: r.marking_guide,

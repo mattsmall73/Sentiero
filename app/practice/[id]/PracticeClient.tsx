@@ -18,6 +18,8 @@ const COACH_MESSAGES = [
 
 type Props = {
   attemptId: string;
+  subject: string;
+  level: string;
   topic: string;
   question: string;
   initialAnswer: string;
@@ -167,6 +169,11 @@ export default function PracticeClient(props: Props) {
 
         <section className="exam-section">
           <h2 className="exam-section-header">Your practice question</h2>
+          {(props.level || props.subject) && (
+            <div className="exam-section-sub">
+              {[props.subject, props.level].filter(Boolean).join(" · ")}
+            </div>
+          )}
           <div className="exam-section-instructions">
             Answer in your own words, in as much detail as you can. There&apos;s no timer, and this
             is practice, so the score you get back is a progress score, not a grade.

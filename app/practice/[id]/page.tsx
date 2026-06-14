@@ -41,6 +41,8 @@ export default async function Page({ params }: { params: { id: string } }) {
   return (
     <PracticeClient
       attemptId={row.attempt.id}
+      subject={row.prompt.subject}
+      level={row.prompt.level ?? ""}
       topic={row.prompt.topic}
       question={row.prompt.question}
       initialAnswer={row.attempt.answer ?? ""}
