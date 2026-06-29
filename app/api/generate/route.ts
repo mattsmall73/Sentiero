@@ -8,7 +8,7 @@ import { extractTitleFromHtml } from "@/lib/title";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-4-6";
 
 function parseTotalMinutes(raw: FormDataEntryValue | null | undefined): number | null {
   if (raw === null || raw === undefined) return null;
