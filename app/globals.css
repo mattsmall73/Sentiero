@@ -61,81 +61,124 @@ textarea:focus-visible {
 }
 
 /* ── Dancing stickman (waiting-state showman) ──────────────────────────────
- * A top-hat-and-cane figure that bobs, sways, kicks and tips his hat while a
- * guide is generating. transform-box: view-box lets every limb pivot around
- * a fixed point in the SVG's own coordinate space (hips, shoulders, hat brim).
+ * A dapper top-hat-and-cane figure (real tailcoat body, not just a stick) who
+ * dances ACROSS the stage while a guide generates: he steps, hops, spins to
+ * turn around at each end, does a centre jump, and works the cane and hat.
+ *
+ * Two layers of motion:
+ *   .sm-travel  — the HTML wrapper, travels in real px across the stage
+ *                 (translateX) with hops (translateY) and turns (scaleX flip).
+ *   inside the SVG — bob, sway, leg kicks, arm swing, cane flourish, hat tip,
+ *                 each limb pivoting around a fixed viewBox point.
  */
-.sm-figure {
-  animation: sm-bob 0.85s ease-in-out infinite;
+.sm-stage {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
 }
-.sm-figure :where(.sm-sway, .sm-leg-l, .sm-leg-r, .sm-arm-free, .sm-arm-cane, .sm-hat) {
+.sm-travel {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 130px;
+  margin-left: -65px;
+  animation: sm-travel 6.4s ease-in-out infinite;
+}
+.sm-figure {
+  display: block;
+  animation: sm-bob 0.64s ease-in-out infinite;
+}
+.sm-figure :where(.sm-sway, .sm-leg-l, .sm-leg-r, .sm-arm-free, .sm-arm-cane, .sm-hat, .sm-shadow) {
   transform-box: view-box;
 }
 .sm-sway {
-  transform-origin: 60px 112px;
-  animation: sm-sway 1.7s ease-in-out infinite;
+  transform-origin: 65px 132px;
+  animation: sm-sway 1.28s ease-in-out infinite;
 }
 .sm-leg-l {
-  transform-origin: 60px 104px;
-  animation: sm-leg-l 0.85s ease-in-out infinite;
+  transform-origin: 65px 110px;
+  animation: sm-leg-l 0.64s ease-in-out infinite;
 }
 .sm-leg-r {
-  transform-origin: 60px 104px;
-  animation: sm-leg-r 0.85s ease-in-out infinite;
+  transform-origin: 65px 110px;
+  animation: sm-leg-r 0.64s ease-in-out infinite;
 }
 .sm-arm-free {
-  transform-origin: 60px 68px;
-  animation: sm-arm-free 0.85s ease-in-out infinite;
+  transform-origin: 65px 70px;
+  animation: sm-arm-free 0.64s ease-in-out infinite;
 }
 .sm-arm-cane {
-  transform-origin: 60px 68px;
-  animation: sm-arm-cane 1.7s ease-in-out infinite;
+  transform-origin: 65px 70px;
+  animation: sm-arm-cane 1.28s ease-in-out infinite;
 }
 .sm-hat {
-  transform-origin: 60px 33px;
-  animation: sm-hat 1.7s ease-in-out infinite;
+  transform-origin: 65px 36px;
+  animation: sm-hat 1.28s ease-in-out infinite;
 }
 .sm-shadow {
-  transform-box: view-box;
-  transform-origin: 60px 156px;
-  animation: sm-shadow 0.85s ease-in-out infinite;
+  transform-origin: 65px 188px;
+  animation: sm-shadow 0.64s ease-in-out infinite;
 }
 
+/* The travelling routine — every keyframe states the full transform so the
+ * scaleX flips (turns) and translateY hops don't reset one another. */
+@keyframes sm-travel {
+  0%   { transform: translateX(-120px) translateY(0)    scaleX(1); }
+  8%   { transform: translateX(-120px) translateY(-12px) scaleX(1); }
+  14%  { transform: translateX(-78px)  translateY(0)    scaleX(1); }
+  20%  { transform: translateX(-40px)  translateY(-12px) scaleX(1); }
+  26%  { transform: translateX(0)      translateY(0)    scaleX(1); }
+  32%  { transform: translateX(42px)   translateY(-12px) scaleX(1); }
+  38%  { transform: translateX(96px)   translateY(0)    scaleX(1); }
+  44%  { transform: translateX(120px)  translateY(-16px) scaleX(1); }
+  50%  { transform: translateX(120px)  translateY(0)    scaleX(-1); } /* turn */
+  57%  { transform: translateX(58px)   translateY(-12px) scaleX(-1); }
+  64%  { transform: translateX(0)      translateY(0)    scaleX(-1); }
+  70%  { transform: translateX(0)      translateY(-20px) scaleX(-1); } /* centre jump */
+  76%  { transform: translateX(-44px)  translateY(0)    scaleX(-1); }
+  84%  { transform: translateX(-96px)  translateY(-12px) scaleX(-1); }
+  92%  { transform: translateX(-120px) translateY(0)    scaleX(-1); }
+  100% { transform: translateX(-120px) translateY(0)    scaleX(1); }  /* turn back, loop */
+}
 @keyframes sm-bob {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
+  50% { transform: translateY(-4px); }
 }
 @keyframes sm-sway {
-  0%, 100% { transform: rotate(-3.5deg); }
-  50% { transform: rotate(3.5deg); }
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
 }
 @keyframes sm-leg-l {
-  0%, 100% { transform: rotate(10deg); }
-  50% { transform: rotate(-14deg); }
+  0%, 100% { transform: rotate(16deg); }
+  50% { transform: rotate(-20deg); }
 }
 @keyframes sm-leg-r {
-  0%, 100% { transform: rotate(-14deg); }
-  50% { transform: rotate(10deg); }
-}
-@keyframes sm-arm-free {
-  0%, 100% { transform: rotate(-12deg); }
+  0%, 100% { transform: rotate(-20deg); }
   50% { transform: rotate(16deg); }
 }
+@keyframes sm-arm-free {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(22deg); }
+}
 @keyframes sm-arm-cane {
-  0%, 100% { transform: rotate(6deg); }
-  35% { transform: rotate(-10deg); }
-  70% { transform: rotate(2deg); }
+  0%   { transform: rotate(8deg); }
+  30%  { transform: rotate(-14deg); }
+  55%  { transform: rotate(24deg); }   /* cane flourish lift */
+  80%  { transform: rotate(0deg); }
+  100% { transform: rotate(8deg); }
 }
 @keyframes sm-hat {
-  0%, 60%, 100% { transform: rotate(0) translateY(0); }
-  25% { transform: rotate(-16deg) translateY(-4px); }
+  0%, 55%, 100% { transform: rotate(0) translateY(0); }
+  20% { transform: rotate(-18deg) translateY(-5px); } /* tip of the hat */
 }
 @keyframes sm-shadow {
   0%, 100% { transform: scaleX(1); opacity: 0.85; }
-  50% { transform: scaleX(0.8); opacity: 0.55; }
+  50% { transform: scaleX(0.78); opacity: 0.5; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sm-travel { animation: none; }
   .sm-figure,
   .sm-figure * {
     animation: none !important;
