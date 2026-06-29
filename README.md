@@ -7,7 +7,7 @@ An AI study/document companion that turns overwhelming documents — worksheets,
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS + inline styles for the strict visual spec
 - Vercel Postgres (`@vercel/postgres`) for guide persistence
-- Anthropic SDK calling Claude Sonnet 4 (`claude-sonnet-4-20250514`)
+- Anthropic SDK calling Claude Sonnet 4.6 (`claude-sonnet-4-6`)
 - `pdf-parse` and `mammoth` for PDF / Word extraction
 - Image uploads sent to Claude as native image blocks
 
