@@ -59,3 +59,85 @@ textarea:focus-visible {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* ── Dancing stickman (waiting-state showman) ──────────────────────────────
+ * A top-hat-and-cane figure that bobs, sways, kicks and tips his hat while a
+ * guide is generating. transform-box: view-box lets every limb pivot around
+ * a fixed point in the SVG's own coordinate space (hips, shoulders, hat brim).
+ */
+.sm-figure {
+  animation: sm-bob 0.85s ease-in-out infinite;
+}
+.sm-figure :where(.sm-sway, .sm-leg-l, .sm-leg-r, .sm-arm-free, .sm-arm-cane, .sm-hat) {
+  transform-box: view-box;
+}
+.sm-sway {
+  transform-origin: 60px 112px;
+  animation: sm-sway 1.7s ease-in-out infinite;
+}
+.sm-leg-l {
+  transform-origin: 60px 104px;
+  animation: sm-leg-l 0.85s ease-in-out infinite;
+}
+.sm-leg-r {
+  transform-origin: 60px 104px;
+  animation: sm-leg-r 0.85s ease-in-out infinite;
+}
+.sm-arm-free {
+  transform-origin: 60px 68px;
+  animation: sm-arm-free 0.85s ease-in-out infinite;
+}
+.sm-arm-cane {
+  transform-origin: 60px 68px;
+  animation: sm-arm-cane 1.7s ease-in-out infinite;
+}
+.sm-hat {
+  transform-origin: 60px 33px;
+  animation: sm-hat 1.7s ease-in-out infinite;
+}
+.sm-shadow {
+  transform-box: view-box;
+  transform-origin: 60px 156px;
+  animation: sm-shadow 0.85s ease-in-out infinite;
+}
+
+@keyframes sm-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes sm-sway {
+  0%, 100% { transform: rotate(-3.5deg); }
+  50% { transform: rotate(3.5deg); }
+}
+@keyframes sm-leg-l {
+  0%, 100% { transform: rotate(10deg); }
+  50% { transform: rotate(-14deg); }
+}
+@keyframes sm-leg-r {
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(10deg); }
+}
+@keyframes sm-arm-free {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(16deg); }
+}
+@keyframes sm-arm-cane {
+  0%, 100% { transform: rotate(6deg); }
+  35% { transform: rotate(-10deg); }
+  70% { transform: rotate(2deg); }
+}
+@keyframes sm-hat {
+  0%, 60%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-16deg) translateY(-4px); }
+}
+@keyframes sm-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.85; }
+  50% { transform: scaleX(0.8); opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sm-figure,
+  .sm-figure * {
+    animation: none !important;
+  }
+}
