@@ -59,7 +59,7 @@ export default function HomePage() {
       <section className="apps" id="tools">
         <div className="wrap">
           <div className="section-head">
-            <h2>Two ways to begin</h2>
+            <h2>Three ways to begin</h2>
           </div>
           <div className="app-grid">
             <Link href="/guide" className="app-card">
@@ -165,6 +165,65 @@ export default function HomePage() {
               </div>
               <span className="app-link">
                 Start a paper{" "}
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </Link>
+
+            <Link href="/practice" className="app-card">
+              <div className="app-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 20v-6" />
+                  <path d="M12 14c0-3 2-4 2-6.5A4 4 0 0 0 8 5" />
+                  <path d="M9 20h6" />
+                </svg>
+              </div>
+              <h3>Practise a topic</h3>
+              <div className="flow">
+                <div className="flow-step">
+                  <span className="flow-dot" />
+                  <div className="flow-text">
+                    <span className="flow-label">You name</span>Your level and a topic you&apos;re
+                    revising
+                  </div>
+                </div>
+                <div className="flow-step">
+                  <span className="flow-dot" />
+                  <div className="flow-text">
+                    <span className="flow-label">Sentiero</span>Writes you a question on it
+                  </div>
+                </div>
+                <div className="flow-step">
+                  <span className="flow-dot" />
+                  <div className="flow-text">
+                    <span className="flow-label">You answer</span>In your own words, no timer
+                  </div>
+                </div>
+                <div className="flow-step">
+                  <span className="flow-dot" />
+                  <div className="flow-text">
+                    <span className="flow-label">You get</span>Warm coaching and a progress score
+                  </div>
+                </div>
+              </div>
+              <span className="app-link">
+                Start practising{" "}
                 <svg
                   width="15"
                   height="15"

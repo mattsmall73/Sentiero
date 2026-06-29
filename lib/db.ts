@@ -86,6 +86,48 @@ export async function ensureSchema(): Promise<void> {
   await sql`CREATE INDEX IF NOT EXISTS practice_sessions_paper_id_idx ON practice_sessions (paper_id)`;
   await sql`CREATE INDEX IF NOT EXISTS practice_sessions_submitted_at_idx ON practice_sessions (submitted_at)`;
 
+  // Practice tool (the third Sentiero tool). Distinct from Exam Practice above:
+  // there is no uploaded paper or real mark scheme. The student names a topic, a
+  // question is generated, and the answer earns coaching plus a PROGRESS score
+  // (not an exam mark). A prompt row holds the generated question and an internal
+  // marking guide (level descriptors used only to keep the progress score
+  // consistent run-to-run); an attempt row holds one student's freeform answer
+  // and, once coached, the stored results. Unlike a sat paper, an attempt never
+  // locks: the answer stays editable so "back to your answer" from the coaching
+  // screen returns to the working page with the work intact.
+  await sql`
+    CREATE TABLE IF NOT EXISTS practice_prompts (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      subject text NOT NULL,
+      -- The chosen level (GCSE / A-level / Undergraduate). Required at entry: it
+      -- anchors what a strong answer is, so the progress score is marked against
+      -- a real standard rather than a floating one. Nullable at the DB only to
+      -- keep the self-migrate path safe; the API always supplies it.
+      level text,
+      topic text NOT NULL,
+      question text NOT NULL,
+      marking_guide jsonb NOT NULL,
+      user_name text
+    )
+  `;
+  // Self-migrate a practice_prompts table created before level existed.
+  await sql`ALTER TABLE practice_prompts ADD COLUMN IF NOT EXISTS level text`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS practice_attempts (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      prompt_id uuid NOT NULL REFERENCES practice_prompts(id),
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      user_name text,
+      answer text NOT NULL DEFAULT '',
+      submitted_at timestamptz,
+      coaching_results jsonb,
+      results_html text
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS practice_attempts_prompt_id_idx ON practice_attempts (prompt_id)`;
+
   migrated = true;
 }
 
