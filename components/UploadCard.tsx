@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { DancingStickman } from "./DancingStickman";
 
 type Preset = { label: string; minutes: number | null };
 
@@ -400,6 +401,8 @@ export function UploadCard() {
           {loading ? "Generating…" : "Generate"}
         </button>
       </div>
+
+      {loading && <DancingStickman />}
 
       {error && (
         <div
