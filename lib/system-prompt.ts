@@ -266,6 +266,7 @@ After the closing </html> tag, output nothing else. No summary, no notes.`;
 export type BuildUserMessageInput = {
   extractedText: string | null;
   images?: { mediaType: string; base64: string }[];
+  pdfs?: { base64: string }[];
   totalMinutes: number | null;
   userName: string | null;
   sourceLabel?: string | null;
@@ -294,6 +295,8 @@ export function buildUserMessage(input: BuildUserMessageInput): string {
     lines.push("--- BEGIN DOCUMENT ---");
     lines.push(input.extractedText.trim());
     lines.push("--- END DOCUMENT ---");
+  } else if (input.pdfs && input.pdfs.length > 0) {
+    lines.push("The document is attached as a PDF in this message. It may be scanned, so read the pages carefully.");
   } else if (input.images && input.images.length > 0) {
     lines.push("The document is provided as image(s) in this message. Read them carefully.");
   } else {

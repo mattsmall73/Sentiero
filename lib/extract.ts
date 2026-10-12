@@ -3,6 +3,9 @@ import mammoth from "mammoth";
 export type ExtractResult = {
   text: string | null;
   images: { mediaType: ImageMediaType; base64: string }[];
+  // PDFs with no usable text layer (scans, photos saved as PDF) are sent to
+  // Claude whole so it can read the pages visually.
+  pdfs: { base64: string }[];
   sourceLabel: string | null;
 };
 
@@ -18,6 +21,9 @@ const IMAGE_TYPES: Record<string, ImageMediaType> = {
 
 const MAX_TEXT_CHARS = 120_000;
 
+// Below this many characters per page we treat a PDF as scanned.
+const MIN_PDF_CHARS_PER_PAGE = 100;
+
 function clampText(text: string): string {
   if (text.length <= MAX_TEXT_CHARS) return text;
   return text.slice(0, MAX_TEXT_CHARS) + "\n\n[...document truncated...]";
@@ -30,10 +36,27 @@ export async function extractFromFile(file: File): Promise<ExtractResult> {
 
   if (type === "application/pdf" || name.toLowerCase().endsWith(".pdf")) {
     const pdfParse = (await import("pdf-parse")).default;
-    const result = await pdfParse(buffer);
+    let text = "";
+    let pages = 1;
+    try {
+      const result = await pdfParse(buffer);
+      text = (result.text || "").trim();
+      pages = Math.max(1, result.numpages || 1);
+    } catch (err) {
+      console.warn("pdf-parse failed, sending PDF to the model instead", err);
+    }
+    if (text.length < MIN_PDF_CHARS_PER_PAGE * pages) {
+      return {
+        text: null,
+        images: [],
+        pdfs: [{ base64: buffer.toString("base64") }],
+        sourceLabel: name,
+      };
+    }
     return {
-      text: clampText(result.text || ""),
+      text: clampText(text),
       images: [],
+      pdfs: [],
       sourceLabel: name,
     };
   }
@@ -46,6 +69,7 @@ export async function extractFromFile(file: File): Promise<ExtractResult> {
     return {
       text: clampText(result.value || ""),
       images: [],
+      pdfs: [],
       sourceLabel: name,
     };
   }
@@ -63,6 +87,7 @@ export async function extractFromFile(file: File): Promise<ExtractResult> {
     return {
       text: null,
       images: [{ mediaType, base64: buffer.toString("base64") }],
+      pdfs: [],
       sourceLabel: name,
     };
   }
@@ -71,6 +96,7 @@ export async function extractFromFile(file: File): Promise<ExtractResult> {
     return {
       text: clampText(buffer.toString("utf8")),
       images: [],
+      pdfs: [],
       sourceLabel: name,
     };
   }
@@ -78,6 +104,7 @@ export async function extractFromFile(file: File): Promise<ExtractResult> {
   return {
     text: clampText(buffer.toString("utf8")),
     images: [],
+    pdfs: [],
     sourceLabel: name,
   };
 }
@@ -86,6 +113,7 @@ export function extractFromPastedText(text: string): ExtractResult {
   return {
     text: clampText(text),
     images: [],
+    pdfs: [],
     sourceLabel: null,
   };
 }
