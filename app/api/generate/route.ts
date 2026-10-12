@@ -47,7 +47,7 @@ async function readInput(req: NextRequest): Promise<{
     const totalMinutes = parseTotalMinutes(form.get("total_minutes"));
     const userName = parseName(form.get("user_name"));
 
-    let extracted: ExtractResult = { text: null, images: [], sourceLabel: null };
+    let extracted: ExtractResult = { text: null, images: [], pdfs: [], sourceLabel: null };
     if (file instanceof File && file.size > 0) {
       extracted = await extractFromFile(file);
     } else if (typeof pasted === "string" && pasted.trim().length > 0) {
@@ -64,7 +64,7 @@ async function readInput(req: NextRequest): Promise<{
   const extracted: ExtractResult =
     typeof body.text === "string" && body.text.trim().length > 0
       ? extractFromPastedText(body.text)
-      : { text: null, images: [], sourceLabel: null };
+      : { text: null, images: [], pdfs: [], sourceLabel: null };
   return {
     extracted,
     totalMinutes:
@@ -92,7 +92,8 @@ export async function POST(req: NextRequest) {
 
   const hasText = !!(extracted.text && extracted.text.trim().length > 0);
   const hasImages = extracted.images.length > 0;
-  if (!hasText && !hasImages) {
+  const hasPdfs = extracted.pdfs.length > 0;
+  if (!hasText && !hasImages && !hasPdfs) {
     return NextResponse.json(
       { error: "Add a file or paste some text before generating." },
       { status: 400 },
@@ -104,12 +105,19 @@ export async function POST(req: NextRequest) {
   const userText = buildUserMessage({
     extractedText: extracted.text,
     images: extracted.images,
+    pdfs: extracted.pdfs,
     totalMinutes,
     userName,
     sourceLabel: extracted.sourceLabel,
   });
 
-  const content: Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> = [];
+  const content: Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.DocumentBlockParam> = [];
+  for (const pdf of extracted.pdfs) {
+    content.push({
+      type: "document",
+      source: { type: "base64", media_type: "application/pdf", data: pdf.base64 },
+    });
+  }
   for (const img of extracted.images) {
     content.push({
       type: "image",
